@@ -14,7 +14,7 @@ import { findReferences, getOtherReferenceLocation } from './core/navigator/refe
 export function Run(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
         title: "▶ Run",
-        command: 'vscode-go-plus.runMain',
+        command: 'gopp.runMain',
         arguments: [uri]
     });
 }
@@ -30,7 +30,7 @@ export function Run(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
 export function Debug(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
         title: "🐞 Debug",
-        command: 'vscode-go-plus.debugMain',
+        command: 'gopp.debugMain',
         arguments: [uri]
     });
 }
@@ -46,7 +46,7 @@ export function Debug(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
 export function Args(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
         title: "⚙ Args",
-        command: 'vscode-go-plus.setMainArgs',
+        command: 'gopp.setMainArgs',
         arguments: [uri]
     });
 }
@@ -80,19 +80,19 @@ export async function G(
             {
                 label: '实现接口方法',
                 description: '为结构体实现指定接口',
-                command: 'vscode-go-plus.generateInterfaceStubs',
+                command: 'gopp.generateInterfaceStubs',
                 arguments: [structName, filePath, lineNumber + 1]
             },
             {
                 label: '生成结构体标签',
                 description: '为结构体字段生成标签',
-                command: 'vscode-go-plus.generateStructTags',
+                command: 'gopp.generateStructTags',
                 arguments: [structName, filePath, lineNumber + 1, fields]
             },
             {
                 label: '生成 Option 代码',
                 description: '生成 Option 模式代码',
-                command: 'vscode-go-plus.generateOptionCode',
+                command: 'gopp.generateOptionCode',
                 arguments: [structName, filePath, lineNumber + 1, fields]
             }
         ];
@@ -108,7 +108,7 @@ export async function G(
 
         addCodeLens(range, {
             title: 'Ⓖ',
-            command: 'vscode-go-plus.showStructOptions',
+            command: 'gopp.showStructOptions',
             arguments: [{
                 type: 'struct',
                 name: structName,
@@ -121,7 +121,7 @@ export async function G(
     } else if (!IsTestFile(document)) { // 不是结构体，也不是测试文件
         addCodeLens(range, {
             title: 'Ⓖ',
-            command: '_executeFunctionTest', // 生成测试用例
+            command: 'gopp.executeFunctionTest', // 生成测试用例
             arguments: [{
                 uri: document.uri,
                 position: new vscode.Position(lineNumber, 0)

@@ -32,7 +32,7 @@ export class ModItem extends TreeItem {
 		this.label = lable;
 		if (!isDir) {
 			this.command = {
-				command: 'golibrary.openResource',
+				command: 'vscode.open',
 				arguments: [uri],
 				title: 'Open Resource',
 			};

@@ -102,7 +102,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // Register visible comments translation command
         context.subscriptions.push(
             vscode.commands.registerCommand(
-                'vscode-go-plus.translateVisibleComments',
+                'gopp.translateVisibleComments',
                 () => this.translateVisibleComments()
             )
         );
@@ -404,7 +404,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         );
         translateAction.command = {
             title: '翻译选中文本',
-            command: 'vscode-go-plus.translateSelection'
+            command: 'gopp.translateSelection'
         };
         
         // 设置高优先级，使其在小灯泡菜单中更靠前显示
@@ -819,7 +819,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // Register translation command
         context.subscriptions.push(
             vscode.commands.registerCommand(
-                'vscode-go-plus.translateSelection',
+                'gopp.translateSelection',
                 () => provider.translateSelection()
             )
         );
@@ -828,7 +828,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // Register configuration
         context.subscriptions.push(
             vscode.commands.registerCommand(
-                'vscode-go-plus.configureTranslation',
+                'gopp.configureTranslation',
                 async () => {
                     // 打开设置页面
                     // Open settings page
@@ -844,7 +844,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // Register toggle auto translate command
         context.subscriptions.push(
             vscode.commands.registerCommand(
-                'vscode-go-plus.toggleAutoTranslate',
+                'gopp.toggleAutoTranslate',
                 async () => {
                     // 切换自动翻译设置
                     // Toggle auto translation setting

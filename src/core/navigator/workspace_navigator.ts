@@ -26,7 +26,7 @@ export class WorkspaceNavigator {
         this.updateStatusBarText(statusBarItem);
         
         // 当点击时触发工作空间导航命令
-        statusBarItem.command = "vscode-go-plus.workspaceNavigator";
+        statusBarItem.command = "gopp.workspaceNavigator";
         
         // 添加提示文字和快捷键信息
         statusBarItem.tooltip = "gopp 工作空间导航 (Ctrl+Shift+G W/ Cmd+Shift+G W)";

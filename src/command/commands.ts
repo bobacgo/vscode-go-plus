@@ -12,11 +12,11 @@ export function DisposeCommands(ctx : vscode.ExtensionContext) : Array<vscode.Di
     registerGenerateCommands(ctx) // 注册生成命令
     registerNavigationCommands(ctx); // 注册导航命令 TODO 移除
     return [
-        registerCommandOpenFolder("vscode-go-plus.openFolder"), // 打开最近项目
-        registerCommandShowStructOptions("vscode-go-plus.showStructOptions"), // 显示结构选项
-        registerCommandGenerateStructTags("vscode-go-plus.generateStructTags"), // 生成结构体标签
-        registerCommandWorkspaceNavigator(ctx, "vscode-go-plus.workspaceNavigator"), // 工作空间导航器
-        registerCommandFuncText("_executeFunctionTest"), // 生成函数测试
+        registerCommandOpenFolder("gopp.openFolder"), // 打开最近项目
+        registerCommandShowStructOptions("gopp.showStructOptions"), // 显示结构选项
+        registerCommandGenerateStructTags("gopp.generateStructTags"), // 生成结构体标签
+        registerCommandWorkspaceNavigator(ctx, "gopp.workspaceNavigator"), // 工作空间导航器
+        registerCommandFuncText("gopp.executeFunctionTest"), // 生成函数测试
     ];
 }
 

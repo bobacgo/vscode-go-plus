@@ -14,7 +14,7 @@ export function registerRunCommands(context: vscode.ExtensionContext) {
     // 注册运行main函数命令
     // Register run main function command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.runMain', async (fileUri: vscode.Uri) => {
+        vscode.commands.registerCommand('gopp.runMain', async (fileUri: vscode.Uri) => {
             await runGoFile(fileUri, false, fileArgsMap);
         })
     );
@@ -22,7 +22,7 @@ export function registerRunCommands(context: vscode.ExtensionContext) {
     // 注册调试main函数命令
     // Register debug main function command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.debugMain', async (fileUri: vscode.Uri) => {
+        vscode.commands.registerCommand('gopp.debugMain', async (fileUri: vscode.Uri) => {
             await runGoFile(fileUri, true, fileArgsMap);
         })
     );
@@ -30,7 +30,7 @@ export function registerRunCommands(context: vscode.ExtensionContext) {
     // 注册带参数运行main函数命令
     // Register run main function with args command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.runMainWithArgs', async (fileUri: vscode.Uri) => {
+        vscode.commands.registerCommand('gopp.runMainWithArgs', async (fileUri: vscode.Uri) => {
             await runGoFileWithArgs(fileUri, false, fileArgsMap, context);
         })
     );
@@ -38,7 +38,7 @@ export function registerRunCommands(context: vscode.ExtensionContext) {
     // 注册带参数调试main函数命令
     // Register debug main function with args command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.debugMainWithArgs', async (fileUri: vscode.Uri) => {
+        vscode.commands.registerCommand('gopp.debugMainWithArgs', async (fileUri: vscode.Uri) => {
             await runGoFileWithArgs(fileUri, true, fileArgsMap, context);
         })
     );
@@ -46,7 +46,7 @@ export function registerRunCommands(context: vscode.ExtensionContext) {
     // 注册设置main函数参数命令
     // Register set main function args command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.setMainArgs', async (fileUri: vscode.Uri) => {
+        vscode.commands.registerCommand('gopp.setMainArgs', async (fileUri: vscode.Uri) => {
             await setGoFileArgs(fileUri, fileArgsMap, context);
         })
     );

@@ -1,7 +1,7 @@
 # Basic variables
 # 基本变量定义
 BINARY_NAME := cgo
-OUTPUT_DIR := ../resources/bin
+OUTPUT_DIR := ../../resources/bin
 SRC_FILE := ./main.go
 
 # Target for WebAssembly

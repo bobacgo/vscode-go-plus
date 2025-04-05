@@ -7,17 +7,17 @@ import { findInterfaces } from '../pkg/file';
 export function registerGenerateCommands(context: vscode.ExtensionContext) {
     // 修改多项选择命令的实现
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.generateOptions', async (structName: string, filePath: string, line: number) => {
+        vscode.commands.registerCommand('gopp.generateOptions', async (structName: string, filePath: string, line: number) => {
             const isTestFile = filePath.endsWith('_test.go');
 
             // 根据文件类型提供不同的选项
             const options = isTestFile ? [
-                { label: '实现接口方法', description: '为结构体实现指定接口', command: 'vscode-go-plus.generateInterfaceStubs' },
-                { label: '生成 Option 代码', description: '生成 Option 模式代码', command: 'vscode-go-plus.generateOptionCode' }
+                { label: '实现接口方法', description: '为结构体实现指定接口', command: 'gopp.generateInterfaceStubs' },
+                { label: '生成 Option 代码', description: '生成 Option 模式代码', command: 'gopp.generateOptionCode' }
             ] : [
-                { label: '实现接口方法', description: '为结构体实现指定接口', command: 'vscode-go-plus.generateInterfaceStubs' },
+                { label: '实现接口方法', description: '为结构体实现指定接口', command: 'gopp.generateInterfaceStubs' },
                 { label: '生成单元测试', description: '为当前文件生成测试文件', command: 'go.test.generate.file' },
-                { label: '生成 Option 代码', description: '生成 Option 模式代码', command: 'vscode-go-plus.generateOptionCode' }
+                { label: '生成 Option 代码', description: '生成 Option 模式代码', command: 'gopp.generateOptionCode' }
             ];
 
             const selection = await vscode.window.showQuickPick(options, {
@@ -32,7 +32,7 @@ export function registerGenerateCommands(context: vscode.ExtensionContext) {
 
     // 注册 Option 代码生成命令
     context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-go-plus.generateOptionCode', async (structName: string, filePath: string, line: number, fields: StructField[]) => {
+        vscode.commands.registerCommand('gopp.generateOptionCode', async (structName: string, filePath: string, line: number, fields: StructField[]) => {
             // 弹出多选框让用户选择字段
             const selectedFields = await vscode.window.showQuickPick(
                 fields.map(field => ({
@@ -120,7 +120,7 @@ ${unselectedFields.map(field => `    ${field.name} ${field.type}`).join('\n')}
         })
     );
 
-    const disposable = vscode.commands.registerCommand('vscode-go-plus.generateInterfaceStubs',
+    const disposable = vscode.commands.registerCommand('gopp.generateInterfaceStubs',
         async (structName: string, filePath: string, line: number) => {
             // 查找所有接口
             let workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;

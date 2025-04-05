@@ -16,6 +16,26 @@ let workspaceNavigatorStatusBarItem: vscode.StatusBarItem;
 // 记录deactivate函数
 let goLibraryDeactivate: (() => void) | undefined;
 
+// 添加一个Set来跟踪已注册的命令，避免重复注册
+const registeredCommands = new Set<string>();
+
+// 安全注册命令的辅助函数
+function registerCommandSafely(context: vscode.ExtensionContext, commandId: string, handler: (...args: any[]) => any): void {
+    // 规范化命令ID
+    const normalizedId = commandId.startsWith('gopp.') ? `gopp.${commandId.substring(5)}` : commandId;
+    
+    // 检查命令是否已注册
+    if (registeredCommands.has(normalizedId)) {
+        console.warn(`跳过重复注册的命令: ${normalizedId} / Skipping duplicate command registration: ${normalizedId}`);
+        return;
+    }
+    
+    // 注册命令并记录
+    const disposable = vscode.commands.registerCommand(normalizedId, handler);
+    context.subscriptions.push(disposable);
+    registeredCommands.add(normalizedId);
+}
+
 /**
  * 扩展激活函数
  * 当扩展被激活时，会调用此函数
@@ -46,29 +66,27 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
         // 注册刷新模块树命令
-        context.subscriptions.push(
-            vscode.commands.registerCommand('golibrary.refresh', async () => {
-                // 显示进度提示
-                await vscode.window.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: '正在刷新 Go 模块树',
-                        cancellable: false
-                    },
-                    async (progress) => {
-                        progress.report({ increment: 0 });
-                        try {
-                            // 刷新树视图
-                            await goLibraryTreeData.refreshModules();
-                            progress.report({ increment: 100 });
-                            vscode.window.showInformationMessage('Go 模块树刷新成功！');
-                        } catch (error) {
-                            vscode.window.showErrorMessage(`刷新 Go 模块树失败: ${error}`);
-                        }
+        registerCommandSafely(context, 'golibrary.refresh', async () => {
+            // 显示进度提示
+            await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: '正在刷新 Go 模块树',
+                    cancellable: false
+                },
+                async (progress) => {
+                    progress.report({ increment: 0 });
+                    try {
+                        // 刷新树视图
+                        await goLibraryTreeData.refreshModules();
+                        progress.report({ increment: 100 });
+                        vscode.window.showInformationMessage('Go 模块树刷新成功！');
+                    } catch (error) {
+                        vscode.window.showErrorMessage(`刷新 Go 模块树失败: ${error}`);
                     }
-                );
-            })
-        );
+                }
+            );
+        });
 
         // 注册翻译提供程序
         TranslationProvider.register(context);

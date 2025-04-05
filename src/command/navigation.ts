@@ -8,7 +8,7 @@ import { InterfaceInfo, ImplementationInfo, MethodImplementationInfo } from '../
  */
 export function registerNavigationCommands(context: vscode.ExtensionContext) {
     // 注册接口导航命令 - 跳转到接口定义
-    let disposable = vscode.commands.registerCommand('vscode-go-plus.navigateToInterface', async (interfaceInfo: InterfaceInfo) => {
+    let disposable = vscode.commands.registerCommand('gopp.navigateToInterface', async (interfaceInfo: InterfaceInfo) => {
         const uri = vscode.Uri.file(interfaceInfo.filePath);
         const document = await vscode.workspace.openTextDocument(uri);
         const position = new vscode.Position(interfaceInfo.lineNumber - 1, 0);
@@ -21,7 +21,7 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 
     // 注册接口方法导航命令 - 跳转到接口方法
-    let disposableMethod = vscode.commands.registerCommand('vscode-go-plus.navigateToInterfaceMethod', async (interfaceInfo: InterfaceInfo, methodName: string) => {
+    let disposableMethod = vscode.commands.registerCommand('gopp.navigateToInterfaceMethod', async (interfaceInfo: InterfaceInfo, methodName: string) => {
         const uri = vscode.Uri.file(interfaceInfo.filePath);
         const document = await vscode.workspace.openTextDocument(uri);
         
@@ -76,7 +76,7 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableMethod);
 
     // 注册展示接口实现列表命令
-    let disposableImplementations = vscode.commands.registerCommand('vscode-go-plus.listInterfaceImplementations', async (interfaceInfo: InterfaceInfo, implementations: ImplementationInfo[]) => {
+    let disposableImplementations = vscode.commands.registerCommand('gopp.listInterfaceImplementations', async (interfaceInfo: InterfaceInfo, implementations: ImplementationInfo[]) => {
         if (implementations.length === 0) {
             vscode.window.showInformationMessage(`No implementations found for interface ${interfaceInfo.name}`);
             return;
@@ -111,7 +111,7 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableImplementations);
 
     // 注册方法实现列表命令
-    let disposableMethodImplementations = vscode.commands.registerCommand('vscode-go-plus.listMethodImplementations', async (methodName: string, implementations: MethodImplementationInfo[]) => {
+    let disposableMethodImplementations = vscode.commands.registerCommand('gopp.listMethodImplementations', async (methodName: string, implementations: MethodImplementationInfo[]) => {
         if (implementations.length === 0) {
             vscode.window.showInformationMessage(`No implementations found for method ${methodName}`);
             return;

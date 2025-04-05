@@ -4,7 +4,6 @@ import { exec } from 'child_process';
 import { GoLibraryTreeData } from '../core/library/tree';
 import { ModItem } from '../core/library/item';
 import { Logger } from '../pkg/logger';
-import { openExplorer } from '../pkg/file';
 import { findInFiles } from '../pkg/go';
 
 // 记录器
@@ -16,13 +15,6 @@ const logger = Logger.withContext('GoModCommands');
  * @param modTreeProvider 模块树提供者
  */
 export function registerGoModCommands(context: vscode.ExtensionContext, modTreeProvider: GoLibraryTreeData): void {
-  // 打开资源
-  context.subscriptions.push(
-    vscode.commands.registerCommand('golibrary.openResource', (resource: vscode.Uri) => {
-      logger.debug(`打开资源: ${resource.fsPath}`);
-      vscode.commands.executeCommand('vscode.open', resource);
-    })
-  );
 
   // 在Go Library中显示活动文件
   context.subscriptions.push(
@@ -109,13 +101,6 @@ export function registerGoModCommandsOld(context: vscode.ExtensionContext, modTr
   context.subscriptions.push(
     vscode.commands.registerCommand('golibrary.collapse', () => {
       modTree.collapse();
-    })
-  );
-
-  // 在文件浏览器中打开
-  context.subscriptions.push(
-    vscode.commands.registerCommand('golibrary.openInFileExplorer', (resource) => {
-      openExplorer(resource);
     })
   );
 

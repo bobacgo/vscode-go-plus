@@ -317,12 +317,12 @@
     "configuration": {
       "title": "Go++",
       "properties": {
-        "goAssist.enableInterfaceNavigation": {
+        "gopp.enableInterfaceNavigation": {
           "type": "boolean",
           "default": true,
           "description": "Enable interface navigation feature"
         },
-        "goAssist.workspaceIcon": {
+        "gopp.workspaceIcon": {
           "type": "string",
           "enum": [
             "$(repo)",
@@ -348,37 +348,37 @@
           "default": true,
           "description": "Focus when revealing."
         },
-        "goAssist.translation.microsoftApiKey": {
+        "gopp.translation.microsoftApiKey": {
           "type": "string",
           "default": "",
           "description": "Microsoft 翻译 API 密钥 / Microsoft Translator API key"
         },
-        "goAssist.translation.googleApiKey": {
+        "gopp.translation.googleApiKey": {
           "type": "string",
           "default": "",
           "description": "谷歌翻译 API 密钥 / Google Translation API key"
         },
-        "goAssist.translation.baiduAppId": {
+        "gopp.translation.baiduAppId": {
           "type": "string",
           "default": "",
           "description": "百度翻译 APP ID / Baidu Translation APP ID"
         },
-        "goAssist.translation.baiduSecretKey": {
+        "gopp.translation.baiduSecretKey": {
           "type": "string",
           "default": "",
           "description": "百度翻译密钥 / Baidu Translation Secret Key"
         },
-        "goAssist.translation.aliyunAccessKeyId": {
+        "gopp.translation.aliyunAccessKeyId": {
           "type": "string",
           "default": "",
           "description": "阿里云翻译访问密钥ID / Aliyun Translation Access Key ID"
         },
-        "goAssist.translation.aliyunAccessKeySecret": {
+        "gopp.translation.aliyunAccessKeySecret": {
           "type": "string",
           "default": "",
           "description": "阿里云翻译访问密钥密钥 / Aliyun Translation Access Key Secret"
         },
-        "goAssist.translation.sourceLanguage": {
+        "gopp.translation.sourceLanguage": {
           "type": "string",
           "default": "en",
           "description": "默认源语言 / Default source language",
@@ -393,7 +393,7 @@
             "ru"
           ]
         },
-        "goAssist.translation.targetLanguage": {
+        "gopp.translation.targetLanguage": {
           "type": "string",
           "default": "zh-CN",
           "description": "默认目标语言 / Default target language",
@@ -408,12 +408,12 @@
             "ru"
           ]
         },
-        "goAssist.translation.autoDetectLanguage": {
+        "gopp.translation.autoDetectLanguage": {
           "type": "boolean",
           "default": true,
           "description": "自动检测源语言 / Auto-detect source language"
         },
-        "goAssist.translation.engineType": {
+        "gopp.translation.engineType": {
           "type": "string",
           "default": "auto",
           "enum": [
@@ -434,7 +434,7 @@
           ],
           "description": "翻译引擎类型（智能模式会根据可用性自动选择最佳引擎） / Translation engine type (Smart mode will automatically select the best available engine)"
         },
-        "goAssist.translation.autoTranslateOnActiveEditor": {
+        "gopp.translation.autoTranslateOnActiveEditor": {
           "type": "boolean",
           "default": true,
           "description": "自动翻译当前活动编辑窗口内容 / Automatically translate content in active editor"
@@ -467,10 +467,7 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
-    "@types/axios": "^0.9.36",
-    "axios": "^1.8.4",
-    "chokidar": "^3.6.0",
-    "open-file-explorer": "^1.0.2"
+    "chokidar": "^3.6.0"
   },
   "keywords": [],
   "author": "",

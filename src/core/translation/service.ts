@@ -1,9 +1,141 @@
-import axios from 'axios';
 import { Logger } from '../../pkg/logger';
 import * as crypto from 'crypto';
+import * as https from 'https'; // 添加原生https模块
+import * as http from 'http'; // 添加原生http模块
+import { URL } from 'url'; // 用于解析URL
 
 // 初始化日志实例
 const logger = Logger.withContext('TranslationService');
+
+/**
+ * 发送HTTP请求的辅助函数
+ * Helper function to send HTTP requests
+ * 
+ * @param url 请求URL / Request URL
+ * @param options 请求选项 / Request options
+ * @param data 请求数据 / Request data
+ * @returns Promise<T> 响应数据 / Response data
+ */
+async function httpRequest<T>(url: string, options: http.RequestOptions = {}, data?: any): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        // 解析URL，确定使用http还是https
+        // Parse URL to determine whether to use http or https
+        const parsedUrl = new URL(url);
+        const httpModule = parsedUrl.protocol === 'https:' ? https : http;
+        
+        // 设置请求方法，默认GET
+        // Set request method, default is GET
+        options.method = options.method || 'GET';
+        
+        // 如果有data且没有设置Content-Type，设置默认值
+        // If there is data and Content-Type is not set, set default value
+        if (data && !options.headers?.['Content-Type']) {
+            options.headers = options.headers || {};
+            options.headers['Content-Type'] = 'application/json';
+        }
+        
+        // 创建请求
+        // Create request
+        const req = httpModule.request(url, options, (res) => {
+            // 响应数据缓冲区
+            // Response data buffer
+            let responseData = '';
+            
+            // 设置响应编码
+            // Set response encoding
+            res.setEncoding('utf8');
+            
+            // 接收数据
+            // Receive data
+            res.on('data', (chunk) => {
+                responseData += chunk;
+            });
+            
+            // 完成接收
+            // Complete receiving
+            res.on('end', () => {
+                // 检查状态码
+                // Check status code
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        // 尝试解析JSON
+                        // Try to parse JSON
+                        const parsedData = JSON.parse(responseData);
+                        resolve(parsedData as T);
+                    } catch (e) {
+                        // 返回原始响应文本
+                        // Return original response text
+                        resolve(responseData as unknown as T);
+                    }
+                } else {
+                    // 请求失败
+                    // Request failed
+                    reject(new Error(`请求失败，状态码: ${res.statusCode} / Request failed with status code: ${res.statusCode}`));
+                }
+            });
+        });
+        
+        // 错误处理
+        // Error handling
+        req.on('error', (error) => {
+            reject(error);
+        });
+        
+        // 发送请求数据
+        // Send request data
+        if (data) {
+            if (typeof data === 'string') {
+                req.write(data);
+            } else {
+                req.write(JSON.stringify(data));
+            }
+        }
+        
+        // 结束请求
+        // End request
+        req.end();
+    });
+}
+
+/**
+ * 封装GET请求
+ * Wrap GET request
+ * 
+ * @param url 请求URL / Request URL
+ * @param options 请求选项 / Request options
+ * @returns Promise<T> 响应数据 / Response data
+ */
+async function httpGet<T>(url: string, options: http.RequestOptions = {}): Promise<T> {
+    options.method = 'GET';
+    return httpRequest<T>(url, options);
+}
+
+/**
+ * 封装POST请求
+ * Wrap POST request
+ * 
+ * @param url 请求URL / Request URL
+ * @param data 请求数据 / Request data
+ * @param options 请求选项 / Request options
+ * @returns Promise<T> 响应数据 / Response data
+ */
+async function httpPost<T>(url: string, data: any, options: http.RequestOptions = {}): Promise<T> {
+    options.method = 'POST';
+    return httpRequest<T>(url, options, data);
+}
+
+/**
+ * 转换查询参数到URL字符串
+ * Convert query parameters to URL string
+ * 
+ * @param params 查询参数对象 / Query parameters object
+ * @returns URL查询字符串 / URL query string
+ */
+function objectToQueryString(params: Record<string, any>): string {
+    return Object.entries(params)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+}
 
 /**
  * 翻译服务类
@@ -171,33 +303,34 @@ export class TranslationService {
                 return `${text} (需要配置API密钥 / API key required)`;
             }
 
-            // 修复：更正Axios泛型类型，应该是响应类型而非请求体类型
-            // Fix: Correct Axios generic type, it should be response type not request body type
-            interface MicrosoftTranslateResponse {
-                translations: { text: string }[];
-            }
+            // 构建请求URL，包含查询参数
+            // Build request URL with query parameters
+            const queryParams = {
+                'api-version': '3.0',
+                'from': sourceLang,
+                'to': targetLang
+            };
+            const requestUrl = `${this.API_URL}?${objectToQueryString(queryParams)}`;
 
-            const response = await axios.post<MicrosoftTranslateResponse[]>(
-                this.API_URL,
-                [{ text }], // 请求体
-                {
-                    headers: {
-                        'Ocp-Apim-Subscription-Key': apiKey,
-                        'Ocp-Apim-Subscription-Region': this.REGION,
-                        'Content-type': 'application/json',
-                    },
-                    params: {
-                        'api-version': '3.0',
-                        'from': sourceLang,
-                        'to': targetLang
-                    },
-                    responseType: 'json'
-                }
+            // 准备请求头和请求体
+            // Prepare request headers and body
+            const headers = {
+                'Ocp-Apim-Subscription-Key': apiKey,
+                'Ocp-Apim-Subscription-Region': this.REGION,
+                'Content-type': 'application/json',
+            };
+            
+            // 发送POST请求
+            // Send POST request
+            const response = await httpPost<Array<{ translations: { text: string }[] }>>(
+                requestUrl,
+                [{ text }],
+                { headers }
             );
 
             // 提取翻译结果
             // Extract translation result
-            const result = response.data[0]?.translations[0]?.text;
+            const result = response[0]?.translations[0]?.text;
             return result || text;
         } catch (error) {
             logger.error('翻译请求失败 / Translation request failed:', error);
@@ -233,32 +366,27 @@ export class TranslationService {
             const googleSourceLang = this.convertToGoogleLanguageCode(sourceLang);
             const googleTargetLang = this.convertToGoogleLanguageCode(targetLang);
 
-            // 修复：更正Axios泛型类型，并使用更明确的请求结构
-            // Fix: Correct Axios generic type and use a clearer request structure
-            interface GoogleTranslateResponse {
-                data: {
-                    translations: { translatedText: string }[];
-                };
-            }
-
-            const response = await axios.post<GoogleTranslateResponse>(
-                'https://translation.googleapis.com/language/translate/v2',
-                {
-                    q: text,
-                    source: googleSourceLang,
-                    target: googleTargetLang,
-                    format: 'text'
-                },
-                {
-                    params: { key: apiKey },
-                    responseType: 'json'
-                }
+            // 构建请求URL和数据
+            // Build request URL and data
+            const requestUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+            const requestData = {
+                q: text,
+                source: googleSourceLang,
+                target: googleTargetLang,
+                format: 'text'
+            };
+            
+            // 发送POST请求
+            // Send POST request
+            const response = await httpPost<{ data: { translations: { translatedText: string }[] } }>(
+                requestUrl,
+                requestData
             );
 
             // 提取翻译结果
             // Extract translation result
-            if (response.data?.data?.translations?.length > 0) {
-                return response.data.data.translations[0].translatedText;
+            if (response?.data?.translations?.length > 0) {
+                return response.data.translations[0].translatedText;
             }
             return text;
         } catch (error) {
@@ -313,41 +441,37 @@ export class TranslationService {
             const signature = crypto.createHmac('sha1', accessKeySecret)
                 .update(stringToSign)
                 .digest('base64');
-                
-            // 发送请求到阿里云翻译API
-            // 修复：更正Axios泛型类型，并使用更明确的请求结构
-            // Fix: Correct Axios generic type and use a clearer request structure
-            interface AliyunTranslateResponse {
-                Data: {
-                    Translated: string;
-                };
-            }
-
-            const response = await axios.post<AliyunTranslateResponse>(
+            
+            // 准备请求头和数据
+            // Prepare request headers and data
+            const headers = {
+                'Content-Type': 'application/json;chrset=utf-8',
+                'Accept': 'application/json',
+                'Date': date,
+                'x-acs-signature-method': 'HMAC-SHA1',
+                'x-acs-signature-nonce': nonce,
+                'x-acs-signature-version': '1.0',
+                'Authorization': `acs ${accessKeyId}:${signature}`
+            };
+            
+            const requestData = {
+                sourceLanguage: aliyunSourceLang,
+                targetLanguage: aliyunTargetLang,
+                sourceText: text,
+                formatType: 'text'
+            };
+            
+            // 发送POST请求
+            // Send POST request
+            const response = await httpPost<{ Data: { Translated: string } }>(
                 'https://mt.aliyuncs.com/api/v1/translate',
-                {
-                    sourceLanguage: aliyunSourceLang,
-                    targetLanguage: aliyunTargetLang,
-                    sourceText: text,
-                    formatType: 'text'
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json;chrset=utf-8',
-                        'Accept': 'application/json',
-                        'Date': date,
-                        'x-acs-signature-method': 'HMAC-SHA1',
-                        'x-acs-signature-nonce': nonce,
-                        'x-acs-signature-version': '1.0',
-                        'Authorization': `acs ${accessKeyId}:${signature}`
-                    },
-                    responseType: 'json'
-                }
+                requestData,
+                { headers }
             );
             
             // 提取翻译结果
-            if (response.data?.Data?.Translated) {
-                return response.data.Data.Translated;
+            if (response?.Data?.Translated) {
+                return response.Data.Translated;
             }
             return text;
         } catch (error) {
@@ -394,29 +518,30 @@ export class TranslationService {
                 .update(appId + text + salt + secretKey)
                 .digest('hex');
             
-            // 发送请求到百度翻译API
-            const response = await axios<{
-                trans_result: { dst: string }[];
-            }>({
-                url: this.BAIDU_API_URL,
-                method: 'get',
-                params: {
-                    q: text,
-                    from: baiduSourceLangCode,
-                    to: baiduLangCode,
-                    appid: appId,
-                    salt,
-                    sign
-                }
-            });
+            // 构建请求URL，百度使用GET请求
+            // Build request URL, Baidu uses GET request
+            const queryParams = {
+                q: encodeURIComponent(text),
+                from: baiduSourceLangCode,
+                to: baiduLangCode,
+                appid: appId,
+                salt,
+                sign
+            };
+            
+            const requestUrl = `${this.BAIDU_API_URL}?${objectToQueryString(queryParams)}`;
+            
+            // 发送GET请求
+            // Send GET request
+            const response = await httpGet<{ trans_result: { dst: string }[] }>(requestUrl);
             
             // 检查响应数据
-            if (response.data && response.data.trans_result && response.data.trans_result.length > 0) {
-                return response.data.trans_result[0].dst;
+            if (response?.trans_result?.length > 0) {
+                return response.trans_result[0].dst;
             }
             
             // 如果没有获取到翻译结果，返回原文
-            logger.warn('百度翻译API未返回预期结果 / Baidu Translation API did not return expected result:', response.data);
+            logger.warn('百度翻译API未返回预期结果 / Baidu Translation API did not return expected result:', response);
             return `${text} (百度翻译未返回结果 / Baidu translation returned no result)`;
         } catch (error) {
             logger.error('百度翻译请求失败 / Baidu translation request failed:', error);
