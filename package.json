@@ -1,0 +1,450 @@
+{
+  "name": "gopp",
+  "displayName": "Go ++",
+  "description": "Enhance the experience of developing Go projects in VSCode",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobacgo/vscode-go-plus.git"
+  },
+  "engines": {
+    "vscode": "^1.54.0",
+    "cursor": "^1.0.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:go",
+    "workspaceContains:*.go",
+    "workspaceContains:*/*.go",
+    "workspaceContains:*/*/*.go"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gopp.generateCode",
+        "title": "Go++: 生成代码",
+        "icon": "$(add)"
+      },
+      {
+        "command": "gopp.navigateToInterface",
+        "title": "Go++: Navigate to Interface"
+      },
+      {
+        "command": "gopp.listInterfaceImplementations",
+        "title": "Go++: List Interface Implementations"
+      },
+      {
+        "command": "gopp.listMethodImplementations",
+        "title": "Go++: List Method Implementations"
+      },
+      {
+        "command": "gopp.navigateToInterfaceMethod",
+        "title": "Go++: Navigate to Interface Method"
+      },
+      {
+        "command": "gopp.runMain",
+        "title": "Go++: Run Main"
+      },
+      {
+        "command": "gopp.debugMain",
+        "title": "Go++: Debug Main"
+      },
+      {
+        "command": "golibrary.market",
+        "title": "Open Go Package Market (wip)",
+        "icon": "$(test-view-icon)"
+      },
+      {
+        "command": "golibrary.openResource",
+        "title": "Open Resource"
+      },
+      {
+        "command": "golibrary.openInFileExplorer",
+        "title": "Reveal in File Explorer"
+      },
+      {
+        "command": "golibrary.findInFiles",
+        "title": "Find in Files",
+        "icon": "$(remote-explorer-documentation)"
+      },
+      {
+        "command": "golibrary.focus",
+        "title": "Focus"
+      },
+      {
+        "command": "golibrary.collapse",
+        "title": "Collapse Folder in Explorer",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "golibrary.blur",
+        "title": "Blur"
+      },
+      {
+        "command": "golibrary.openGoModFile",
+        "title": "Open go.mod File",
+        "icon": "$(preferences-open-settings)"
+      },
+      {
+        "command": "golibrary.execGoModTidy",
+        "title": "Tidy (beta)",
+        "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "golibrary.showActiveFileInExplorer",
+        "title": "Reveal in Go Library"
+      },
+      {
+        "command": "gopp.generateOptions",
+        "title": "Go++: 生成代码选项"
+      },
+      {
+        "command": "gopp.generateUnitTest",
+        "title": "Go++: 生成单元测试"
+      },
+      {
+        "command": "gopp.generateOptionCode",
+        "title": "Go++: 生成 Option 代码"
+      },
+      {
+        "command": "gopp.runMain",
+        "title": "Go++: 运行 Go Main 函数"
+      },
+      {
+        "command": "gopp.debugMain",
+        "title": "Go++: 调试 Go Main 函数"
+      },
+      {
+        "command": "gopp.runMainWithArgs",
+        "title": "Go++: 带参数运行 Go Main 函数"
+      },
+      {
+        "command": "gopp.debugMainWithArgs",
+        "title": "Go++: 带参数调试 Go Main 函数"
+      },
+      {
+        "command": "gopp.setMainArgs",
+        "title": "Go++: 设置 Go Main 函数参数"
+      },
+      {
+        "command": "gopp.workspaceNavigator",
+        "title": "Go: 打开工作空间导航器",
+        "category": "Go++",
+        "icon": "$(project)"
+      },
+      {
+        "command": "gopp.translateSettings",
+        "title": "Go++: 翻译设置",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "translation-settings.refresh",
+        "title": "刷新",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "translation-settings.setDefault",
+        "title": "设为默认",
+        "icon": "$(check)"
+      },
+      {
+        "command": "translation-settings.testConnection",
+        "title": "测试连接",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "gopp.toggleAutoTranslate",
+        "title": "Go++: 切换自动翻译当前编辑窗口",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "gopp.translateVisibleComments",
+        "title": "Go++: 翻译当前可见窗口的注释",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "golibrary.refresh",
+        "title": "刷新",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "translation-settings",
+          "title": "翻译设置",
+          "icon": "$(globe)"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "golibrary",
+          "name": "Library",
+          "icon": "./resources/gomod/package.svg",
+          "contextualTitle": "Library",
+          "when": "go.isExtensionActive && (gomod.running || golibrary.running)"
+        }
+      ],
+      "translation-settings": [
+        {
+          "id": "translation-engines",
+          "name": "翻译引擎"
+        },
+        {
+          "id": "translation-options",
+          "name": "翻译选项"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title/context": [
+        {
+          "command": "golibrary.showActiveFileInExplorer",
+          "when": "golibrary.running"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "gopp.workspaceNavigator",
+          "when": "view == explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "translation-settings.refresh",
+          "when": "view == translation-engines",
+          "group": "navigation"
+        },
+        {
+          "command": "golibrary.refresh",
+          "when": "view == golibrary",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "golibrary.openInFileExplorer",
+          "when": "view == golibrary && viewItem != modules"
+        },
+        {
+          "command": "golibrary.openGoModFile",
+          "when": "view == golibrary && viewItem == modules",
+          "group": "inline"
+        },
+        {
+          "command": "golibrary.execGoModTidy",
+          "when": "view == golibrary && viewItem == modules",
+          "group": "inline"
+        },
+        {
+          "command": "golibrary.findInFiles",
+          "when": "view == golibrary && viewItem == package",
+          "group": "inline"
+        },
+        {
+          "command": "golibrary.findInFiles",
+          "when": "view == golibrary && viewItem == directory",
+          "group": "inline"
+        },
+        {
+          "command": "golibrary.findInFiles",
+          "when": "view == golibrary && viewItem == gosdk",
+          "group": "inline"
+        },
+        {
+          "command": "translation-settings.setDefault",
+          "when": "view == translation-engines && viewItem == engine-item",
+          "group": "inline"
+        },
+        {
+          "command": "translation-settings.testConnection",
+          "when": "view == translation-engines && viewItem == engine-item",
+          "group": "inline"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "gopp.generateCode",
+          "group": "navigation",
+          "when": "resourceLangId == go"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "gopp.workspaceNavigator",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "golibrary.collapse",
+        "key": "shift+ctrl+.",
+        "mac": "cmd+shift+.",
+        "when": "gomod.running || golibrary.running"
+      },
+      {
+        "command": "golibrary.showActiveFileInExplorer",
+        "key": "shift+ctrl+/",
+        "mac": "cmd+shift+/",
+        "when": "gomod.running || golibrary.running"
+      },
+      {
+        "command": "golibrary.focus",
+        "key": "ctrl+shift+'",
+        "mac": "cmd+shift+'",
+        "when": "focusedView != golibrary && (gomod.running || golibrary.running)"
+      },
+      {
+        "command": "golibrary.blur",
+        "key": "ctrl+shift+'",
+        "mac": "cmd+shift+'",
+        "when": "focusedView == golibrary && (gomod.running || golibrary.running)"
+      },
+      {
+        "command": "gopp.workspaceNavigator",
+        "key": "ctrl+shift+g w",
+        "mac": "cmd+shift+g w",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Go++",
+      "properties": {
+        "goAssist.enableInterfaceNavigation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable interface navigation feature"
+        },
+        "goAssist.workspaceIcon": {
+          "type": "string",
+          "enum": [
+            "$(repo)",
+            "$(root-folder)",
+            "$(organization)",
+            "$(folder)",
+            "$(project)",
+            "$(home)",
+            "$(symbol-folder)",
+            "$(circuit-board)",
+            "$(bookmark)"
+          ],
+          "default": "$(root-folder)",
+          "description": "图标用于工作空间导航器状态栏项目"
+        },
+        "golibrary.autoReveal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic reveal in Go Library."
+        },
+        "golibrary.focusMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Focus when revealing."
+        },
+        "goAssist.translation.microsoftApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Microsoft 翻译 API 密钥 / Microsoft Translator API key"
+        },
+        "goAssist.translation.googleApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "谷歌翻译 API 密钥 / Google Translation API key"
+        },
+        "goAssist.translation.baiduAppId": {
+          "type": "string",
+          "default": "",
+          "description": "百度翻译 APP ID / Baidu Translation APP ID"
+        },
+        "goAssist.translation.baiduSecretKey": {
+          "type": "string",
+          "default": "",
+          "description": "百度翻译密钥 / Baidu Translation Secret Key"
+        },
+        "goAssist.translation.aliyunAccessKeyId": {
+          "type": "string",
+          "default": "",
+          "description": "阿里云翻译访问密钥ID / Aliyun Translation Access Key ID"
+        },
+        "goAssist.translation.aliyunAccessKeySecret": {
+          "type": "string",
+          "default": "",
+          "description": "阿里云翻译访问密钥密钥 / Aliyun Translation Access Key Secret"
+        },
+        "goAssist.translation.sourceLanguage": {
+          "type": "string",
+          "default": "en",
+          "description": "默认源语言 / Default source language",
+          "enum": ["en", "zh-CN", "ja", "ko", "fr", "de", "es", "ru"]
+        },
+        "goAssist.translation.targetLanguage": {
+          "type": "string",
+          "default": "zh-CN",
+          "description": "默认目标语言 / Default target language",
+          "enum": ["en", "zh-CN", "ja", "ko", "fr", "de", "es", "ru"]
+        },
+        "goAssist.translation.autoDetectLanguage": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动检测源语言 / Auto-detect source language"
+        },
+        "goAssist.translation.engineType": {
+          "type": "string",
+          "default": "auto",
+          "enum": ["auto", "built_in", "microsoft", "google", "baidu", "aliyun"],
+          "enumDescriptions": [
+            "智能选择最佳翻译引擎（优先使用已配置的API，最后使用内置翻译）/ Smart select the best translation engine (prioritize configured APIs, finally built-in)",
+            "使用内置翻译功能（不需要配置） / Use built-in translation (no configuration needed)",
+            "使用微软翻译API（需要API密钥） / Use Microsoft Translator API (requires API key)",
+            "使用谷歌翻译API（需要API密钥） / Use Google Translation API (requires API key)",
+            "使用百度翻译API（需要APP ID和密钥） / Use Baidu Translation API (requires APP ID and secret key)",
+            "使用阿里云翻译API（需要AccessKey ID和密钥） / Use Aliyun Translation API (requires AccessKey ID and secret)"
+          ],
+          "description": "翻译引擎类型（智能模式会根据可用性自动选择最佳引擎） / Translation engine type (Smart mode will automatically select the best available engine)"
+        },
+        "goAssist.translation.autoTranslateOnActiveEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动翻译当前活动编辑窗口内容 / Automatically translate content in active editor"
+        }
+      }
+    },
+    "codeLens": {
+      "language": "go"
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^12.11.7",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "eslint": "^7.15.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.1.3",
+    "typescript": "^4.1.2",
+    "vscode-test": "^1.6.1"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "open-file-explorer": "^1.0.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
