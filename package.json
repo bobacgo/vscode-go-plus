@@ -8,7 +8,7 @@
     "url": "https://github.com/bobacgo/vscode-go-plus.git"
   },
   "engines": {
-    "vscode": "^1.54.0",
+    "vscode": "^1.74.0",
     "cursor": "^1.0.0"
   },
   "categories": [
@@ -22,6 +22,7 @@
     "workspaceContains:*/*/*.go"
   ],
   "main": "./out/extension.js",
+  "icon": "resources/logo.png",
   "contributes": {
     "commands": [
       {
@@ -381,13 +382,31 @@
           "type": "string",
           "default": "en",
           "description": "默认源语言 / Default source language",
-          "enum": ["en", "zh-CN", "ja", "ko", "fr", "de", "es", "ru"]
+          "enum": [
+            "en",
+            "zh-CN",
+            "ja",
+            "ko",
+            "fr",
+            "de",
+            "es",
+            "ru"
+          ]
         },
         "goAssist.translation.targetLanguage": {
           "type": "string",
           "default": "zh-CN",
           "description": "默认目标语言 / Default target language",
-          "enum": ["en", "zh-CN", "ja", "ko", "fr", "de", "es", "ru"]
+          "enum": [
+            "en",
+            "zh-CN",
+            "ja",
+            "ko",
+            "fr",
+            "de",
+            "es",
+            "ru"
+          ]
         },
         "goAssist.translation.autoDetectLanguage": {
           "type": "boolean",
@@ -397,7 +416,14 @@
         "goAssist.translation.engineType": {
           "type": "string",
           "default": "auto",
-          "enum": ["auto", "built_in", "microsoft", "google", "baidu", "aliyun"],
+          "enum": [
+            "auto",
+            "built_in",
+            "microsoft",
+            "google",
+            "baidu",
+            "aliyun"
+          ],
           "enumDescriptions": [
             "智能选择最佳翻译引擎（优先使用已配置的API，最后使用内置翻译）/ Smart select the best translation engine (prioritize configured APIs, finally built-in)",
             "使用内置翻译功能（不需要配置） / Use built-in translation (no configuration needed)",
@@ -441,6 +467,8 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
+    "@types/axios": "^0.9.36",
+    "axios": "^1.8.4",
     "chokidar": "^3.6.0",
     "open-file-explorer": "^1.0.2"
   },

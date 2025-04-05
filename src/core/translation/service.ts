@@ -171,25 +171,29 @@ export class TranslationService {
                 return `${text} (需要配置API密钥 / API key required)`;
             }
 
-            const response = await axios({
-                baseURL: this.API_URL,
-                url: '',
-                method: 'post',
-                headers: {
-                    'Ocp-Apim-Subscription-Key': apiKey,
-                    'Ocp-Apim-Subscription-Region': this.REGION,
-                    'Content-type': 'application/json',
-                },
-                params: {
-                    'api-version': '3.0',
-                    'from': sourceLang,
-                    'to': targetLang
-                },
-                data: [{
-                    'text': text
-                }],
-                responseType: 'json'
-            });
+            // 修复：更正Axios泛型类型，应该是响应类型而非请求体类型
+            // Fix: Correct Axios generic type, it should be response type not request body type
+            interface MicrosoftTranslateResponse {
+                translations: { text: string }[];
+            }
+
+            const response = await axios.post<MicrosoftTranslateResponse[]>(
+                this.API_URL,
+                [{ text }], // 请求体
+                {
+                    headers: {
+                        'Ocp-Apim-Subscription-Key': apiKey,
+                        'Ocp-Apim-Subscription-Region': this.REGION,
+                        'Content-type': 'application/json',
+                    },
+                    params: {
+                        'api-version': '3.0',
+                        'from': sourceLang,
+                        'to': targetLang
+                    },
+                    responseType: 'json'
+                }
+            );
 
             // 提取翻译结果
             // Extract translation result
@@ -229,29 +233,33 @@ export class TranslationService {
             const googleSourceLang = this.convertToGoogleLanguageCode(sourceLang);
             const googleTargetLang = this.convertToGoogleLanguageCode(targetLang);
 
-            const response = await axios({
-                url: 'https://translation.googleapis.com/language/translate/v2',
-                method: 'post',
-                params: {
-                    key: apiKey
-                },
+            // 修复：更正Axios泛型类型，并使用更明确的请求结构
+            // Fix: Correct Axios generic type and use a clearer request structure
+            interface GoogleTranslateResponse {
                 data: {
+                    translations: { translatedText: string }[];
+                };
+            }
+
+            const response = await axios.post<GoogleTranslateResponse>(
+                'https://translation.googleapis.com/language/translate/v2',
+                {
                     q: text,
                     source: googleSourceLang,
                     target: googleTargetLang,
                     format: 'text'
+                },
+                {
+                    params: { key: apiKey },
+                    responseType: 'json'
                 }
-            });
+            );
 
             // 提取翻译结果
             // Extract translation result
-            if (response.data && 
-                response.data.data && 
-                response.data.data.translations && 
-                response.data.data.translations.length > 0) {
+            if (response.data?.data?.translations?.length > 0) {
                 return response.data.data.translations[0].translatedText;
             }
-            
             return text;
         } catch (error) {
             logger.error('谷歌翻译请求失败 / Google translation request failed:', error);
@@ -307,31 +315,40 @@ export class TranslationService {
                 .digest('base64');
                 
             // 发送请求到阿里云翻译API
-            const response = await axios({
-                url: 'https://mt.aliyuncs.com/api/v1/translate',
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json;chrset=utf-8',
-                    'Accept': 'application/json',
-                    'Date': date,
-                    'x-acs-signature-method': 'HMAC-SHA1',
-                    'x-acs-signature-nonce': nonce,
-                    'x-acs-signature-version': '1.0',
-                    'Authorization': `acs ${accessKeyId}:${signature}`
-                },
-                data: {
+            // 修复：更正Axios泛型类型，并使用更明确的请求结构
+            // Fix: Correct Axios generic type and use a clearer request structure
+            interface AliyunTranslateResponse {
+                Data: {
+                    Translated: string;
+                };
+            }
+
+            const response = await axios.post<AliyunTranslateResponse>(
+                'https://mt.aliyuncs.com/api/v1/translate',
+                {
                     sourceLanguage: aliyunSourceLang,
                     targetLanguage: aliyunTargetLang,
                     sourceText: text,
                     formatType: 'text'
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json;chrset=utf-8',
+                        'Accept': 'application/json',
+                        'Date': date,
+                        'x-acs-signature-method': 'HMAC-SHA1',
+                        'x-acs-signature-nonce': nonce,
+                        'x-acs-signature-version': '1.0',
+                        'Authorization': `acs ${accessKeyId}:${signature}`
+                    },
+                    responseType: 'json'
                 }
-            });
+            );
             
             // 提取翻译结果
-            if (response.data && response.data.data && response.data.data.translated) {
-                return response.data.data.translated;
+            if (response.data?.Data?.Translated) {
+                return response.data.Data.Translated;
             }
-            
             return text;
         } catch (error) {
             logger.error('阿里云翻译请求失败 / Aliyun translation request failed:', error);
@@ -378,7 +395,9 @@ export class TranslationService {
                 .digest('hex');
             
             // 发送请求到百度翻译API
-            const response = await axios({
+            const response = await axios<{
+                trans_result: { dst: string }[];
+            }>({
                 url: this.BAIDU_API_URL,
                 method: 'get',
                 params: {
