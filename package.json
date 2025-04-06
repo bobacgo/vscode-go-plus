@@ -1,0 +1,256 @@
+{
+  "name": "gopp",
+  "displayName": "Go ++",
+  "description": "Enhance the experience of developing Go projects in VSCode",
+  "version": "0.1.0",
+  "publisher": "gopp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobacgo/vscode-go-plus.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0",
+    "cursor": "^1.0.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:go",
+    "workspaceContains:*.go",
+    "workspaceContains:*/*.go",
+    "workspaceContains:*/*/*.go"
+  ],
+  "main": "./out/extension.js",
+  "icon": "resources/logo.png",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gopp.generateCode",
+        "title": "Go++: 生成代码",
+        "icon": "$(add)"
+      },
+      {
+        "command": "gopp.navigateToInterface",
+        "title": "Go++: Navigate to Interface"
+      },
+      {
+        "command": "gopp.listInterfaceImplementations",
+        "title": "Go++: List Interface Implementations"
+      },
+      {
+        "command": "gopp.listMethodImplementations",
+        "title": "Go++: List Method Implementations"
+      },
+      {
+        "command": "gopp.navigateToInterfaceMethod",
+        "title": "Go++: Navigate to Interface Method"
+      },
+      {
+        "command": "gopp.runMain",
+        "title": "Go++: Run Main"
+      },
+      {
+        "command": "gopp.debugMain",
+        "title": "Go++: Debug Main"
+      },
+      {
+        "command": "gopp.generateOptions",
+        "title": "Go++: 生成代码选项"
+      },
+      {
+        "command": "gopp.generateUnitTest",
+        "title": "Go++: 生成单元测试"
+      },
+      {
+        "command": "gopp.generateOptionCode",
+        "title": "Go++: 生成 Option 代码"
+      },
+      {
+        "command": "gopp.runMain",
+        "title": "Go++: 运行 Go Main 函数"
+      },
+      {
+        "command": "gopp.debugMain",
+        "title": "Go++: 调试 Go Main 函数"
+      },
+      {
+        "command": "gopp.runMainWithArgs",
+        "title": "Go++: 带参数运行 Go Main 函数"
+      },
+      {
+        "command": "gopp.debugMainWithArgs",
+        "title": "Go++: 带参数调试 Go Main 函数"
+      },
+      {
+        "command": "gopp.setMainArgs",
+        "title": "Go++: 设置 Go Main 函数参数"
+      },
+      {
+        "command": "gopp.home",
+        "title": "Go: 打开工作空间导航器",
+        "category": "Go++",
+        "icon": "$(project)"
+      },
+      {
+        "command": "gopp.translateSettings",
+        "title": "Go++: 翻译设置",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "gopp.workspaceNavigator",
+        "title": "Go++: 工作空间导航",
+        "category": "Go++",
+        "icon": "$(home)"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "golibraries",
+          "name": "Go Libraries",
+          "icon": "./resources/icons/mod.svg",
+          "contextualTitle": "Go Libraries",
+          "when": "go.isExtensionActive"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gopp.workspaceNavigator",
+        "key": "ctrl+shift+g w",
+        "mac": "cmd+shift+g w",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Go++",
+      "properties": {
+        "gopp.translation.engineType": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "microsoft",
+            "google",
+            "baidu",
+            "aliyun",
+            "volcengine",
+            "tencent"
+          ],
+          "description": "翻译引擎类型"
+        },
+        "gopp.translation.sourceLanguage": {
+          "type": "string",
+          "default": "en",
+          "description": "源语言代码"
+        },
+        "gopp.translation.targetLanguage": {
+          "type": "string",
+          "default": "zh-CN",
+          "description": "目标语言代码"
+        },
+        "gopp.translation.autoDetectLanguage": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动检测源语言"
+        },
+        "gopp.translation.autoTranslateOnActiveEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "激活编辑器时自动翻译注释"
+        },
+        "gopp.translation.microsoftApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "微软翻译API密钥",
+          "password": true
+        },
+        "gopp.translation.googleApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "谷歌翻译API密钥",
+          "password": true
+        },
+        "gopp.translation.baiduAppId": {
+          "type": "string",
+          "default": "",
+          "description": "百度翻译应用ID（实名后免费1百万字符/月）"
+        },
+        "gopp.translation.baiduSecretKey": {
+          "type": "string",
+          "default": "",
+          "description": "百度翻译密钥 https://api.fanyi.baidu.com/manage/developer",
+          "password": true
+        },
+        "gopp.translation.aliyunAccessKeyId": {
+          "type": "string",
+          "default": "",
+          "description": "阿里云访问密钥ID（免费1百万字符/月）"
+        },
+        "gopp.translation.aliyunAccessKeySecret": {
+          "type": "string",
+          "default": "",
+          "description": "阿里云访问密钥密钥 https://ram.console.aliyun.com/users",
+          "password": true
+        },
+        "gopp.translation.volcengineAccessKeyId": {
+          "type": "string",
+          "default": "",
+          "description": "火山翻译访问密钥ID（免费2百万字符/月）"
+        },
+        "gopp.translation.volcengineSecretAccessKey": {
+          "type": "string",
+          "default": "",
+          "description": "火山翻译密钥 https://console.volcengine.com/iam/identitymanage/user",
+          "password": true
+        },
+        "gopp.translation.tencentSecretId": {
+          "type": "string",
+          "default": "",
+          "description": "腾讯翻译君密钥ID（免费5百万字符/月）"
+        },
+        "gopp.translation.tencentSecretKey": {
+          "type": "string",
+          "default": "",
+          "description": "腾讯翻译君密钥 https://console.cloud.tencent.com/cam/capi",
+          "password": true
+        }
+      }
+    },
+    "codeLens": {
+      "language": "go"
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^12.11.7",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "eslint": "^7.15.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.1.3",
+    "typescript": "^4.1.2",
+    "vscode-test": "^1.6.1"
+  },
+  "dependencies": {
+    "@alicloud/alimt20181012": "^1.3.0",
+    "@alicloud/openapi-client": "^0.4.13",
+    "chokidar": "^3.6.0",
+    "tencentcloud-sdk-nodejs-tmt": "^4.0.1027"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
