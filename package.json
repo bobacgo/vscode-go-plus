@@ -2,7 +2,7 @@
   "name": "gopp",
   "displayName": "Go ++",
   "description": "Enhance the experience of developing Go projects in VSCode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "gopp",
   "repository": {
     "type": "git",
@@ -139,7 +139,6 @@
           ],
           "description": "翻译引擎类型"
         },
-        
         "gopp.translation.sourceLanguage": {
           "type": "string",
           "default": "en",
