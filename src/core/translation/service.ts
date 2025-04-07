@@ -197,29 +197,20 @@ export class TranslationService {
         
         // 1. 检查是否有配置的API凭据可用，优先使用已配置的引擎
         // Check if there are configured API credentials available, prioritize configured engines
-        if (config.baiduAppId && config.baiduSecretKey) {
-            return this.ENGINE_TYPES.BAIDU;
-        }
-        
         if (config.microsoftApiKey) {
             return this.ENGINE_TYPES.MICROSOFT;
         }
-        
         if (config.googleApiKey) {
             return this.ENGINE_TYPES.GOOGLE;
         }
-        
-        if (config.aliyunAccessKeyId && config.aliyunAccessKeySecret) {
-            return this.ENGINE_TYPES.ALIYUN;
+        if (config.tencentSecretId && config.tencentSecretKey) {
+            return this.ENGINE_TYPES.TENCENT;
         }
-        
         if (config.volcengineAccessKeyId && config.volcengineSecretAccessKey) {
             return this.ENGINE_TYPES.VOLCENGINE;
         }
         
-        // 3. 最后使用内置免费引擎
-        // Finally, use the built-in free engine
-        return this.ENGINE_TYPES.BAIDU;
+        return this.ENGINE_TYPES.AUTO;
     }
 
     /**

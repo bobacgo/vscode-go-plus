@@ -661,7 +661,7 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
 		// 关闭所有展开项
 		// Close all expanded items
 		if (this._treeView.visible) {
-			await vscode.commands.executeCommand('workbench.actions.treeView.golibrary.collapseAll');
+			await vscode.commands.executeCommand('workbench.actions.treeView.golibraries.collapseAll');
 		}
 
 		let rootPath = ''

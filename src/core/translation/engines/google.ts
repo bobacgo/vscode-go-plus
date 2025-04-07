@@ -47,7 +47,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
             if (!this.apiKey) {
                 this.logger.warn('未提供谷歌API密钥，无法执行翻译 / No Google API key provided, cannot perform translation');
                 return {
-                    text: `${text} (需要配置谷歌API密钥 / Google API key required)`,
+                    text: `Google API key required`,
                     from: options.from,
                     to: options.to
                 };

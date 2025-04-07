@@ -54,7 +54,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             if (!this.accessKeyId || !this.secretAccessKey) {
                 this.logger.warn('未提供火山引擎API凭据，无法执行翻译 / No Volcengine API credentials provided, cannot perform translation');
                 return {
-                    text: `${text} (需要配置火山引擎API凭据 / Volcengine API credentials required)`,
+                    text: `Volcengine API credentials required`,
                     from: options.from,
                     to: options.to
                 };

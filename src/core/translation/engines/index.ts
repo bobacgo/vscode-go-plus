@@ -4,16 +4,14 @@
  */
 import { MicrosoftTranslationEngine } from './microsoft';
 import { GoogleTranslationEngine } from './google';
-import { AliyunTranslationEngine } from './aliyun';
-import { BaiduTranslationEngine } from './baidu';
 import { VolcengineTranslationEngine } from './volcengine';
+import { TencentTranslationEngine } from './tencent';
 
 export {
     MicrosoftTranslationEngine,
     GoogleTranslationEngine,
-    AliyunTranslationEngine,
-    BaiduTranslationEngine,
     VolcengineTranslationEngine,
+    TencentTranslationEngine
 };
 
 /**
@@ -23,9 +21,8 @@ export {
 export const ENGINE_TYPES = {
     MICROSOFT: 'microsoft',
     GOOGLE: 'google',
-    ALIYUN: 'aliyun',
-    BAIDU: 'baidu',
     VOLCENGINE: 'volcengine',
+    TENCENT: 'tencent',
     AUTO: 'auto'  // 自动选择引擎类型 / Auto select engine type
 };
 
@@ -36,12 +33,10 @@ export const ENGINE_TYPES = {
 export interface TranslationEngineConfig {
     microsoftApiKey?: string;
     googleApiKey?: string;
-    baiduAppId?: string;
-    baiduSecretKey?: string;
-    aliyunAccessKeyId?: string;
-    aliyunAccessKeySecret?: string;
     volcengineAccessKeyId?: string;
     volcengineSecretAccessKey?: string;
+    tencentSecretId?: string;
+    tencentSecretKey?: string;
 }
 
 /**
@@ -58,13 +53,9 @@ export function createTranslationEngine(type: string, config: TranslationEngineC
             return new MicrosoftTranslationEngine(config.microsoftApiKey);
         case ENGINE_TYPES.GOOGLE:
             return new GoogleTranslationEngine(config.googleApiKey);
-        case ENGINE_TYPES.ALIYUN:
-            return new AliyunTranslationEngine(config.aliyunAccessKeyId, config.aliyunAccessKeySecret);
-        case ENGINE_TYPES.BAIDU:
-            return new BaiduTranslationEngine(config.baiduAppId, config.baiduSecretKey);
         case ENGINE_TYPES.VOLCENGINE:
             return new VolcengineTranslationEngine(config.volcengineAccessKeyId, config.volcengineSecretAccessKey);
         default:
-            return new BaiduTranslationEngine(config.baiduAppId, config.baiduSecretKey);
+            return new TencentTranslationEngine(config.tencentSecretId, config.tencentSecretKey);
     }
 }

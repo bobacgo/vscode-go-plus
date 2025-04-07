@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TranslationService } from './service';
 import { Logger } from '../../pkg/logger';
+import { IsGoFile } from '../../pkg/cond';
 
 // 初始化日志实例
 const logger = Logger.withContext('TranslationProvider');
@@ -39,16 +40,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     private config = {
         microsoftApiKey: '',
         googleApiKey: '',
-        aliyunAccessKeyId: '',
-        aliyunAccessKeySecret: '',
-        baiduAppId: '',
-        baiduSecretKey: '',
-        volcengineAccessKeyId: '',
-        volcengineSecretAccessKey: '',
+        volcengineApiId: '',
+        volcengineApiKey: '',
+        tencentApiId: '',
+        tencentApiKey: '',
         sourceLang: 'en',
         targetLang: 'zh-CN',
         autoDetect: true,
-        engineType: TranslationService.ENGINE_TYPES.BAIDU
+        engineType: TranslationService.ENGINE_TYPES.AUTO
     };
     
     // 已翻译注释的缓存
@@ -119,16 +118,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         this.config = {
             microsoftApiKey: config.get('microsoftApiKey', ''),
             googleApiKey: config.get('googleApiKey', ''),
-            baiduAppId: config.get('baiduAppId', ''),
-            baiduSecretKey: config.get('baiduSecretKey', ''),
-            aliyunAccessKeyId: config.get('aliyunAccessKeyId', ''),
-            aliyunAccessKeySecret: config.get('aliyunAccessKeySecret', ''),
-            volcengineAccessKeyId: config.get('volcengineAccessKeyId', ''),
-            volcengineSecretAccessKey: config.get('volcengineSecretAccessKey', ''),
+            volcengineApiId: config.get('volcengineAccessKeyId', ''),
+            volcengineApiKey: config.get('volcengineSecretAccessKey', ''),
+            tencentApiId: config.get('tencentSecretId', ''),
+            tencentApiKey: config.get('tencentSecretKey', ''),
             sourceLang: config.get('sourceLanguage', 'en'),
             targetLang: config.get('targetLanguage', 'zh-CN'),
             autoDetect: config.get('autoDetectLanguage', true),
-            engineType: config.get('engineType', TranslationService.ENGINE_TYPES.BAIDU)
+            engineType: config.get('engineType', TranslationService.ENGINE_TYPES.AUTO)
         };
     }
     
@@ -263,12 +260,8 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                             {
                                 microsoftApiKey: this.config.microsoftApiKey,
                                 googleApiKey: this.config.googleApiKey,
-                                baiduAppId: this.config.baiduAppId,
-                                baiduSecretKey: this.config.baiduSecretKey,
-                                aliyunAccessKeyId: this.config.aliyunAccessKeyId,
-                                aliyunAccessKeySecret: this.config.aliyunAccessKeySecret,
-                                volcengineAccessKeyId: this.config.volcengineAccessKeyId,
-                                volcengineSecretAccessKey: this.config.volcengineSecretAccessKey
+                                volcengineAccessKeyId: this.config.volcengineApiId,
+                                volcengineSecretAccessKey: this.config.volcengineApiKey
                             }
                         );
                         
@@ -295,12 +288,8 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                         {
                             microsoftApiKey: this.config.microsoftApiKey,
                             googleApiKey: this.config.googleApiKey,
-                            baiduAppId: this.config.baiduAppId,
-                            baiduSecretKey: this.config.baiduSecretKey,
-                            aliyunAccessKeyId: this.config.aliyunAccessKeyId,
-                            aliyunAccessKeySecret: this.config.aliyunAccessKeySecret,
-                            volcengineAccessKeyId: this.config.volcengineAccessKeyId,
-                            volcengineSecretAccessKey: this.config.volcengineSecretAccessKey
+                            volcengineAccessKeyId: this.config.volcengineApiId,
+                            volcengineSecretAccessKey: this.config.volcengineApiKey
                         }
                     );
                     
@@ -360,7 +349,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         const tempDecorationType = vscode.window.createTextEditorDecorationType({
             after: {
                 contentText: displayText,
-                color: new vscode.ThemeColor('editorCodeLens.foreground'),
+                color: this.faintColor(),
                 fontStyle: 'italic', // 斜体
             },
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
@@ -534,23 +523,30 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             logger.info('编辑器为空，无法翻译当前可见内容 / Editor is null, cannot translate visible content');
             return;
         }
-        
+
+        // 检查是否为Go文件
+        // Check if the file is a Go file
+        if (!IsGoFile(this.editor.document)) {
+            logger.info('当前文件不是Go文件，跳过翻译 / Current file is not a Go file, skipping translation');
+            return;
+        }
+
         // 检查是否启用了自动翻译
         // Check if auto translation is enabled
         const config = vscode.workspace.getConfiguration('gopp.translation');
         let autoTranslate = config.get('autoTranslateOnActiveEditor', true);
-        
+
         logger.info(`自动翻译设置状态: ${autoTranslate} / Auto translation setting status`);
-        
+
         // 如果未启用自动翻译，返回
         if (!autoTranslate) {
             logger.info('自动翻译未启用，不执行翻译 / Auto translation not enabled, not performing translation');
             return;
         }
-        
+
         // 不清除现有装饰，允许保留先前的翻译结果
         // Don't clear existing decorations to keep previous translation results
-        
+
         // 获取可见范围
         // Get visible ranges
         const visibleRanges = this.editor.visibleRanges;
@@ -558,7 +554,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             logger.info('没有可见范围，无法翻译 / No visible ranges, cannot translate');
             return;
         }
-        
+
         // 仅翻译注释
         // Only translate comments
         this.translateVisibleComments(/* dontClearDecorations */ true);
@@ -627,10 +623,6 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                     {
                         microsoftApiKey: this.config.microsoftApiKey,
                         googleApiKey: this.config.googleApiKey,
-                        baiduAppId: this.config.baiduAppId,
-                        baiduSecretKey: this.config.baiduSecretKey,
-                        aliyunAccessKeyId: this.config.aliyunAccessKeyId,
-                        aliyunAccessKeySecret: this.config.aliyunAccessKeySecret
                     }
                 );
                 
@@ -746,35 +738,50 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private showCommentTranslation(commentRange: vscode.Range, translatedText: string): void {
         if (!this.editor) return;
-        
+
         logger.debug(`显示翻译结果: "${translatedText.substring(0, 20)}..." / Showing translation result`);
-        
-        // 创建一次性装饰器，但保留显示
-        // Create one-time decorator, but keep displaying
-        const commentDecorationType = vscode.window.createTextEditorDecorationType({
-            after: {
-                contentText: ` → ${translatedText}`,
-                fontStyle: 'italic',
-                color: new vscode.ThemeColor('editorCodeLens.foreground')
-            },
-            // 确保在选择文本时不会消失
-            // Ensure it doesn't disappear when selecting text
-            rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
-        });
-        
-        // 应用装饰器 - 在注释末尾显示
-        // Apply decorator - display at the end of comment
-        this.editor.setDecorations(commentDecorationType, [{
-            range: new vscode.Range(commentRange.end, commentRange.end),
-            hoverMessage: new vscode.MarkdownString(`**原文 / Original**:\n${this.editor.document.getText(commentRange)}\n\n**翻译 / Translation**:\n${translatedText}`)
-        }]);
-        
-        // 保存装饰器以便后续清理
-        // Save decorator for later cleanup
-        if (!this.commentDecorationTypes) {
-            this.commentDecorationTypes = [];
+
+        const originalLines = this.editor.document.getText(commentRange).split('\n');
+        const translatedLines = translatedText.split('\n');
+
+        // 确保原文和译文行数一致
+        // Ensure the number of original and translated lines match
+        const lineCount = Math.min(originalLines.length, translatedLines.length);
+
+        for (let i = 0; i < lineCount; i++) {
+            // 找到当前行末尾的确切位置
+            // Find the exact end position of the current line
+            const currentLineNumber = commentRange.start.line + i;
+            const currentLine = this.editor.document.lineAt(currentLineNumber);
+            const lineEndPos = currentLine.range.end;
+            
+            // 创建只包含行末位置的范围
+            // Create a range that only includes the end position of the line
+            const decorationRange = new vscode.Range(lineEndPos, lineEndPos);
+
+            const lineDecorationType = vscode.window.createTextEditorDecorationType({
+                after: {
+                    contentText: ` → ${translatedLines[i]}`,
+                    fontStyle: 'italic',
+                    color: this.faintColor(),
+                },
+                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
+            });
+
+            // 应用装饰器 - 确保在行尾显示而不是插入到最后一个字符前
+            // Apply decorator - ensure it's shown at the end of line and not inserted before the last character
+            this.editor.setDecorations(lineDecorationType, [{
+                range: decorationRange,
+                hoverMessage: new vscode.MarkdownString(`**Original**:\n${originalLines[i]}\n\n**Translation**:\n${translatedLines[i]}`)
+            }]);
+
+            // 保存装饰器以便后续清理
+            // Save decorator for later cleanup
+            if (!this.commentDecorationTypes) {
+                this.commentDecorationTypes = [];
+            }
+            this.commentDecorationTypes.push(lineDecorationType);
         }
-        this.commentDecorationTypes.push(commentDecorationType);
     }
 
     /**
@@ -909,5 +916,11 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         }
         
         return provider;
+    }
+
+    private faintColor(): string {
+        return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
+             ? 'rgba(116, 127, 117, 0.4)' 
+             : 'rgba(48, 42, 42, 0.3)';
     }
 }

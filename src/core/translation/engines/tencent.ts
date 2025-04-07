@@ -90,7 +90,7 @@ export class TencentTranslationEngine implements TranslationEngine {
             if (!this.client) {
                 this.logger.warn('腾讯云翻译客户端未初始化，无法执行翻译 / Tencent Cloud translation client not initialized');
                 return {
-                    text: `${text} (需要配置腾讯云API凭据 / Tencent Cloud API credentials required)`,
+                    text: `Tencent Cloud API credentials required`,
                     from: options.from,
                     to: options.to
                 };

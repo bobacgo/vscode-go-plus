@@ -134,8 +134,6 @@
             "auto",
             "microsoft",
             "google",
-            "baidu",
-            "aliyun",
             "volcengine",
             "tencent"
           ],
@@ -171,28 +169,6 @@
           "type": "string",
           "default": "",
           "description": "谷歌翻译API密钥",
-          "password": true
-        },
-        "gopp.translation.baiduAppId": {
-          "type": "string",
-          "default": "",
-          "description": "百度翻译应用ID（实名后免费1百万字符/月）"
-        },
-        "gopp.translation.baiduSecretKey": {
-          "type": "string",
-          "default": "",
-          "description": "百度翻译密钥 https://api.fanyi.baidu.com/manage/developer",
-          "password": true
-        },
-        "gopp.translation.aliyunAccessKeyId": {
-          "type": "string",
-          "default": "",
-          "description": "阿里云访问密钥ID（免费1百万字符/月）"
-        },
-        "gopp.translation.aliyunAccessKeySecret": {
-          "type": "string",
-          "default": "",
-          "description": "阿里云访问密钥密钥 https://ram.console.aliyun.com/users",
           "password": true
         },
         "gopp.translation.volcengineAccessKeyId": {

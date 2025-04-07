@@ -48,7 +48,7 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
             if (!this.apiKey) {
                 this.logger.warn('未提供API密钥，无法执行翻译 / No API key provided, cannot perform translation');
                 return {
-                    text: `${text} (需要配置API密钥 / API key required)`,
+                    text: `Microsoft API key required`,
                     from: options.from,
                     to: options.to
                 };
