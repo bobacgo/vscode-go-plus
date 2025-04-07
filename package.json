@@ -162,12 +162,12 @@
         },
         "gopp.translation.microsoftApiKey": {
           "type": "string",
-          "description": "微软翻译API密钥",
+          "description": "微软翻译API密钥 https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade",
           "password": true
         },
         "gopp.translation.googleApiKey": {
           "type": "string",
-          "description": "谷歌翻译API密钥",
+          "description": "谷歌翻译API密钥 https://console.cloud.google.com/apis/credentials",
           "password": true
         },
         "gopp.translation.volcengineAccessKeyId": {

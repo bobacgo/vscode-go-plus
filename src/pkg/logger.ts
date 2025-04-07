@@ -18,6 +18,24 @@ export class Logger {
    * 当前日志级别
    */
   private static currentLevel: LogLevel = LogLevel.DEBUG;
+  
+  /**
+   * 默认时间格式
+   * Default time format
+   */
+  private static readonly DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+  
+  /**
+   * 当前时间格式
+   * Current time format
+   */
+  private static timeFormat: string = Logger.DEFAULT_TIME_FORMAT;
+  
+  /**
+   * 是否启用时间戳
+   * Whether to enable timestamp
+   */
+  private static enableTimestamp: boolean = true;
 
   /**
    * 设置日志级别
@@ -34,6 +52,93 @@ export class Logger {
   public static getLogLevel(): LogLevel {
     return this.currentLevel;
   }
+  
+  /**
+   * 设置时间格式
+   * Set time format
+   * @param format 时间格式字符串，如："yyyy-MM-dd HH:mm:ss.SSS"
+   */
+  public static setTimeFormat(format: string): void {
+    this.timeFormat = format;
+  }
+  
+  /**
+   * 获取当前时间格式
+   * Get current time format
+   * @returns 当前时间格式
+   */
+  public static getTimeFormat(): string {
+    return this.timeFormat;
+  }
+  
+  /**
+   * 启用或禁用时间戳
+   * Enable or disable timestamp
+   * @param enable 是否启用
+   */
+  public static enableTimeStamp(enable: boolean): void {
+    this.enableTimestamp = enable;
+  }
+
+  /**
+   * 格式化当前时间
+   * Format current time
+   * @returns 格式化后的时间字符串
+   */
+  private static formatTime(): string {
+    if (!this.enableTimestamp) {
+      return "";
+    }
+    
+    const now = new Date();
+    let formatted = this.timeFormat;
+    
+    // 年份替换 (year)
+    formatted = formatted.replace(/yyyy/g, now.getFullYear().toString());
+    formatted = formatted.replace(/yy/g, now.getFullYear().toString().slice(-2));
+    
+    // 月份替换 (month)
+    const month = now.getMonth() + 1;
+    formatted = formatted.replace(/MM/g, month < 10 ? `0${month}` : month.toString());
+    formatted = formatted.replace(/M/g, month.toString());
+    
+    // 日期替换 (day)
+    const day = now.getDate();
+    formatted = formatted.replace(/dd/g, day < 10 ? `0${day}` : day.toString());
+    formatted = formatted.replace(/d/g, day.toString());
+    
+    // 小时替换 (hour)
+    const hours = now.getHours();
+    formatted = formatted.replace(/HH/g, hours < 10 ? `0${hours}` : hours.toString());
+    formatted = formatted.replace(/H/g, hours.toString());
+    
+    // 分钟替换 (minute)
+    const minutes = now.getMinutes();
+    formatted = formatted.replace(/mm/g, minutes < 10 ? `0${minutes}` : minutes.toString());
+    formatted = formatted.replace(/m/g, minutes.toString());
+    
+    // 秒替换 (second)
+    const seconds = now.getSeconds();
+    formatted = formatted.replace(/ss/g, seconds < 10 ? `0${seconds}` : seconds.toString());
+    formatted = formatted.replace(/s/g, seconds.toString());
+    
+    // 毫秒替换 (millisecond)
+    const milliseconds = now.getMilliseconds();
+    formatted = formatted.replace(/SSS/g, milliseconds.toString().padStart(3, '0'));
+    
+    return formatted;
+  }
+
+  /**
+   * 构建日志前缀
+   * Build log prefix
+   * @param level 日志级别标识
+   * @returns 格式化的日志前缀
+   */
+  private static buildLogPrefix(level: string): string {
+    const timestamp = this.enableTimestamp ? `${this.formatTime()} ` : '';
+    return `${timestamp}[${level}]`;
+  }
 
   /**
    * 记录调试级别日志
@@ -42,7 +147,7 @@ export class Logger {
    */
   public static debug(message: string, ...data: any[]): void {
     if (this.currentLevel <= LogLevel.DEBUG) {
-      console.log(`[DEBUG] ${message}`, ...data);
+      console.debug(`${this.buildLogPrefix('DEBUG')} ${message}`, ...data);
     }
   }
 
@@ -53,7 +158,7 @@ export class Logger {
    */
   public static info(message: string, ...data: any[]): void {
     if (this.currentLevel <= LogLevel.INFO) {
-      console.log(`[INFO] ${message}`, ...data);
+      console.info(`${this.buildLogPrefix('INFO')} ${message}`, ...data);
     }
   }
 
@@ -64,7 +169,7 @@ export class Logger {
    */
   public static warn(message: string, ...data: any[]): void {
     if (this.currentLevel <= LogLevel.WARN) {
-      console.warn(`[WARN] ${message}`, ...data);
+      console.warn(`${this.buildLogPrefix('WARN')} ${message}`, ...data);
     }
   }
 
@@ -77,9 +182,9 @@ export class Logger {
   public static error(message: string, error?: any, ...data: any[]): void {
     if (this.currentLevel <= LogLevel.ERROR) {
       if (error) {
-        console.error(`[ERROR] ${message}:`, error, ...data);
+        console.error(`${this.buildLogPrefix('ERROR')} ${message}:`, error, ...data);
       } else {
-        console.error(`[ERROR] ${message}`, ...data);
+        console.error(`${this.buildLogPrefix('ERROR')} ${message}`, ...data);
       }
     }
   }
@@ -130,4 +235,4 @@ export class Logger {
       throw error;
     }
   }
-} 
+}

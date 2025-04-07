@@ -7,6 +7,22 @@ import { TranslationProvider } from './core/translation/provider';  // 导入翻
 import { DisposeCommands } from './command/commands';
 import { GoLibraryTreeData } from './core/library/tree';  // 导入Go Library树视图数据模块
 
+/*
+
+          ,_---~~~~~----._         
+   _,,_,*^____      _____``*g*\"*, 
+  / __/ /'     ^.  /      \ ^@q   f 
+ [  @f | @))    |  | @))   l  0 _/  
+  \`/   \~____ / __ \_____/    \   
+   |           _l__l_           I   
+   }          [______]           I  
+   ]            | | |            |  
+   ]             ~ ~             |  
+   |                            |   
+    |                           | 
+
+ */
+
 // 初始化日志实例
 const logger = Logger.withContext('Extension');
 

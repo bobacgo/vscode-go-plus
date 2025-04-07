@@ -60,3 +60,4 @@ export function createTranslationEngine(type: string, config: TranslationEngineC
             return new TencentTranslationEngine(config.tencentSecretId, config.tencentSecretKey);
     }
 }
+

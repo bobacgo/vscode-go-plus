@@ -38,6 +38,11 @@ export interface TranslationEngine {
     readonly name: string;
 
     /**
+     * The icon URL or path of the translation engine.
+     */
+    readonly icon: string; // Icon URL or path / 图标 URL 或路径
+
+    /**
      * Translates the given text according to the specified options.
      * 根据指定的选项翻译给定的文本。
      * 

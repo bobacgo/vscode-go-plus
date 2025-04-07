@@ -9,6 +9,7 @@ import { Logger } from '../../../pkg/logger';
 export class MicrosoftTranslationEngine implements TranslationEngine {
     readonly id = 'microsoft';
     readonly name = 'Microsoft Translator';
+    readonly icon = 'M'
 
     private readonly apiUrl = 'https://api.cognitive.microsofttranslator.com/translate';
     private readonly region = 'global';

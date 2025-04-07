@@ -9,6 +9,7 @@ import { Client } from 'tencentcloud-sdk-nodejs-tmt/tencentcloud/services/tmt/v2
 export class TencentTranslationEngine implements TranslationEngine {
     readonly id = 'tencent';
     readonly name = 'Tencent Translator';
+    readonly icon = 'T'
 
     private readonly logger = Logger.withContext('TencentTranslationEngine');
     private readonly client: Client;

@@ -35,6 +35,19 @@ export class TranslationService {
     private configKey = 'gopp.translation';
     private conf: TranslationEngineConfig;
 
+    // 翻译引擎的权重配置
+    // Weight configuration for translation engines
+    private readonly ENGINE_WEIGHTS = {
+        [ENGINE_TYPES.MICROSOFT]: 20,
+        [ENGINE_TYPES.GOOGLE]: 10,
+        [ENGINE_TYPES.VOLCENGINE]: 20,
+        [ENGINE_TYPES.TENCENT]: 50
+    };
+    
+    // 当前引擎计数器
+    // Current engine counter
+    private engineCounter = 0;
+
     constructor(context: vscode.ExtensionContext) {
         const config = vscode.workspace.getConfiguration(this.configKey);
         this.updateConfig(config);
@@ -189,6 +202,12 @@ export class TranslationService {
         // 修剪空白字符
         // Trim whitespace
         text = text.trim();
+
+        // 全部是特殊字符号返回空字符串
+        // If all are special characters, return empty string
+        if (/^[^\w\s]+$/.test(text)) {
+            return '';
+        }
         
         // 处理多行文本，保留适当的换行符
         // Handle multiline text, preserve appropriate line breaks
@@ -220,10 +239,9 @@ export class TranslationService {
 
     /**
      * 智能选择翻译引擎
-     * Intelligently select translation engine based on available configurations
+     * Intelligently select translation engine based on available configurations and weights
      * 
      * @param userSelectedEngine 用户选择的引擎 / User selected engine
-     * @param config 翻译配置 / Translation configuration
      * @returns 实际使用的引擎 / Actual engine to use
      */
     public selectTranslationEngine(userSelectedEngine: string): string {
@@ -233,21 +251,62 @@ export class TranslationService {
             return userSelectedEngine;
         }
         
-        // 1. 检查是否有配置的API凭据可用，优先使用已配置的引擎
-        // Check if there are configured API credentials available, prioritize configured engines
-        if (this.conf.googleApiKey) {
-            return ENGINE_TYPES.GOOGLE;
-        }
+        // 收集已配置的引擎
+        // Collect configured engines
+        const configuredEngines = [];
+        
         if (this.conf.microsoftApiKey) {
-            return ENGINE_TYPES.MICROSOFT;
+            configuredEngines.push({
+                type: ENGINE_TYPES.MICROSOFT,
+                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.MICROSOFT]
+            });
         }
-        if (this.conf.tencentSecretId && this.conf.tencentSecretKey) {
-            return ENGINE_TYPES.TENCENT;
+        if (this.conf.googleApiKey) {
+            configuredEngines.push({
+                type: ENGINE_TYPES.GOOGLE,
+                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.GOOGLE]
+            });
         }
         if (this.conf.volcengineAccessKeyId && this.conf.volcengineSecretAccessKey) {
-            return ENGINE_TYPES.VOLCENGINE;
+            configuredEngines.push({
+                type: ENGINE_TYPES.VOLCENGINE,
+                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.VOLCENGINE]
+            });
         }
-        return ENGINE_TYPES.AUTO;
+        if (this.conf.tencentSecretId && this.conf.tencentSecretKey) {
+            configuredEngines.push({
+                type: ENGINE_TYPES.TENCENT,
+                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.TENCENT]
+            });
+        }
+        
+        // 如果没有配置任何引擎，返回自动模式
+        // If no engines configured, return auto mode
+        if (configuredEngines.length === 0) {
+            return ENGINE_TYPES.AUTO;
+        }
+        
+        // 基于权重随机选择引擎
+        // Choose engine randomly based on weights
+        let totalWeight = 0;
+        for (const engine of configuredEngines) {
+            totalWeight += engine.weight;
+        }
+        
+        let randomValue = this.engineCounter % totalWeight;
+        this.engineCounter++;
+        
+        let cumulativeWeight = 0;
+        for (const engine of configuredEngines) {
+            cumulativeWeight += engine.weight;
+            if (randomValue < cumulativeWeight) {
+                return engine.type;
+            }
+        }
+        
+        // 默认返回第一个配置的引擎
+        // Default to the first configured engine
+        return configuredEngines[0].type;
     }
 
     /**
@@ -301,7 +360,10 @@ export class TranslationService {
         // 存入缓存
         // Store in cache
         this.storeInCache(cacheKey, result.text);
-        
+
+        if (result.text && this.conf.engineType === ENGINE_TYPES.AUTO) {
+            return engine.icon + ' ' + result.text;
+        }
         return result.text;
     }
 }

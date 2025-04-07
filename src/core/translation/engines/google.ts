@@ -9,6 +9,7 @@ import { Logger } from '../../../pkg/logger';
 export class GoogleTranslationEngine implements TranslationEngine {
     readonly id = 'google';
     readonly name = 'Google Translator';
+    readonly icon = 'G'
 
     private readonly logger = Logger.withContext('GoogleTranslationEngine');
     private readonly supportedLanguages: string[] = [

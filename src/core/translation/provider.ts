@@ -3,6 +3,7 @@ import { TranslationService } from './service';
 import { Logger } from '../../pkg/logger';
 import { IsGoFile } from '../../pkg/cond';
 import { debounce } from '../../pkg/util';
+import { RequestQueue } from '../../pkg/queue';
 
 // 初始化日志实例
 const logger = Logger.withContext('TranslationProvider');
@@ -23,15 +24,15 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         },
         rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
     });
-    
+
     // 当前的装饰器
     // Current decorations
     private decorations: vscode.DecorationOptions[] = [];
-    
+
     // 当前编辑器
     // Current editor
     private editor?: vscode.TextEditor;
-    
+
     // 最后一次翻译的选择范围
     // Last translated selection range
     private lastTranslatedRange?: vscode.Range;
@@ -47,11 +48,19 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     };
 
     private TranslationService: TranslationService;
-    
+
     // 已翻译注释的缓存
     // Cache of translated comments
     private translatedComments = new Map<string, boolean>();
-    
+
+    // 翻译请求队列
+    // Translation request queue
+    private translationQueue: RequestQueue;
+
+    // 最大并发翻译请求数
+    // Maximum number of concurrent translation requests
+    private readonly MAX_CONCURRENT_TRANSLATIONS = 3;
+
     /**
      * 构造函数
      * Constructor
@@ -60,40 +69,47 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // 初始化配置
         // Initialize configuration
         this.loadConfig();
-        
+
         // 初始化翻译服务
         this.TranslationService = new TranslationService(context);
+
+        // 初始化请求队列
+        // Initialize request queue
+        this.translationQueue = new RequestQueue(this.MAX_CONCURRENT_TRANSLATIONS, {
+            requestsPerSecond: 5 // 限制每秒最多处理5个请求
+            // Rate limit to a maximum of 5 requests per second
+        });
 
         // 订阅选择变更事件
         // Subscribe to selection change events
         context.subscriptions.push(
             vscode.window.onDidChangeTextEditorSelection(this.handleSelectionChange, this)
         );
-        
+
         // 订阅配置变更事件
         // Subscribe to configuration change events
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(this.handleConfigChange, this)
         );
-        
+
         // 订阅活动编辑器变更事件
         // Subscribe to active editor change events
         context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(this.handleActiveEditorChange, this)
         );
-        
+
         // 订阅文档变更事件
         // Subscribe to document change events
         context.subscriptions.push(
             vscode.workspace.onDidChangeTextDocument(this.handleDocumentChange, this)
         );
-        
+
         // 订阅编辑器可见范围变更事件
         // Subscribe to editor visible ranges change events
         context.subscriptions.push(
             vscode.window.onDidChangeTextEditorVisibleRanges(() => this.handleEditorScroll())
         );
-        
+
         // 如果已经有活动编辑器，则立即处理
         // If there's already an active editor, process it immediately
         if (vscode.window.activeTextEditor) {
@@ -109,13 +125,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             )
         );
     }
-    
+
     /**
      * 加载配置
      * Load configuration
      */
     private loadConfig(): void {
-        const config = vscode.workspace.getConfiguration('gopp.translation');
+        const config = vscode.workspace.getConfiguration(this.configKey);
         this.config = {
             sourceLang: config.surceLanguage,
             targetLang: config.targetLanguage,
@@ -123,38 +139,38 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             autoTranslateOnActiveEditor: config.autoTranslateOnActiveEditor,
         };
     }
-    
+
     /**
      * 处理配置变更
      * Handle configuration change
      */
     private handleConfigChange(event: vscode.ConfigurationChangeEvent): void {
-        if (event.affectsConfiguration('gopp.translation')) {
+        if (event.affectsConfiguration(this.configKey)) {
             this.loadConfig();
         }
     }
-    
+
     /**
      * 处理选择变更
      * Handle selection change
      */
     private async handleSelectionChange(event: vscode.TextEditorSelectionChangeEvent): Promise<void> {
         this.editor = event.textEditor;
-        
+
         // 不清除现有装饰，允许保留翻译结果
         // Don't clear existing decorations, allow translation results to remain
-        
+
         // 如果没有选中文本，直接返回
         // If no text is selected, return
         if (event.selections[0].isEmpty) {
             return;
         }
-        
+
         // 存储选择范围用于代码操作
         // Store selection range for code actions
         this.lastTranslatedRange = event.selections[0];
     }
-    
+
     /**
      * 清除装饰
      * Clear decorations
@@ -163,7 +179,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         if (this.editor) {
             this.editor.setDecorations(TranslationProvider.decorationType, []);
             this.decorations = [];
-            
+
             // 清理注释装饰器
             // Clean up comment decorations
             if (this.commentDecorationTypes) {
@@ -172,13 +188,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
                 this.commentDecorationTypes = [];
             }
-            
+
             // 清除已翻译注释缓存
             // Clear translated comments cache
             this.translatedComments.clear();
         }
     }
-    
+
     /**
      * 翻译选中的文本
      * Translate selected text
@@ -188,19 +204,19 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             logger.info('编辑器或上次翻译范围为空，无法翻译 / Editor or last translated range is null, cannot translate');
             return;
         }
-        
+
         try {
             const text = this.editor.document.getText(this.lastTranslatedRange);
             if (!text) {
                 logger.info('选中文本为空，无法翻译 / Selected text is empty, cannot translate');
                 return;
             }
-                        
+
             // 确定源语言和目标语言
             // Determine source and target languages
             let sourceLang = this.config.sourceLang;
             let targetLang = this.config.targetLang;
-            
+
             // 如果启用了自动检测
             // If auto-detection is enabled
             if (this.config.autoDetect) {
@@ -222,14 +238,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                     // For other languages, use default settings from configuration
                     logger.info(`使用默认语言设置: ${sourceLang} -> ${targetLang} / Using default language settings`);
                 }
-                
+
                 logger.info(`翻译方向: ${sourceLang} -> ${targetLang} / Translation direction`);
             }
-            
+
             // 显示翻译状态信息
             // Show translation status message
             const statusMessage = vscode.window.setStatusBarMessage('Translating...');
-            
+
             try {
                 // 处理多行翻译 - 显示带有进度的通知
                 // Handle multi-line translation - show notification with progress
@@ -240,7 +256,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                         cancellable: false
                     }, async (progress) => {
                         progress.report({ increment: 30, message: "Processing text..." });
-                        
+
                         // 执行翻译
                         // Perform translation
                         const translatedText = await this.TranslationService.translate(
@@ -248,13 +264,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                             targetLang,
                             sourceLang
                         );
-                        
+
                         progress.report({ increment: 60, message: "更新显示... / Updating display..." });
-                        
+
                         // 为多行文本添加特殊显示
                         // Add special display for multi-line text
                         this.showTranslation(text, translatedText, true);
-                        
+
                         progress.report({ increment: 10, message: "完成 / Done" });
                     });
                 } else {
@@ -265,12 +281,12 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                         targetLang,
                         sourceLang,
                     );
-                    
+
                     // 显示翻译结果
                     // Display translation result
                     this.showTranslation(text, translatedText, text.includes('\n'));
                 }
-                
+
                 // 定期清理过期缓存
                 // Periodically clear expired cache
                 this.checkAndClearExpiredCache();
@@ -284,7 +300,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             vscode.window.showErrorMessage(`翻译失败: ${error}`);
         }
     }
-    
+
     /**
      * 显示翻译结果
      * Show translation result
@@ -298,18 +314,18 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             logger.info('编辑器或上次翻译范围为空，无法显示翻译');
             return;
         }
-        
+
         // 确保翻译结果不为空
         // Ensure translation result is not empty
         if (!translatedText || translatedText === originalText) {
             translatedText = 'Translation failed';
             logger.warn('翻译结果为空或与原文相同');
         }
-        
+
         // 确保显示时考虑多行情况
         // Make sure display handles multiline scenarios
         let displayText = ` → ${translatedText} `;
-        
+
         logger.debug(`翻译结果: ${displayText} / Translation result`);
 
         // 创建装饰器，但使用临时的一次性装饰器，避免使用共享的静态装饰器
@@ -322,32 +338,32 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             },
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
-        
+
         this.decorations = [{
             range: this.lastTranslatedRange,
             hoverMessage: new vscode.MarkdownString(`**Translation**:\n\n${translatedText}`)
         }];
-        
+
         // 应用装饰器
         // Apply decoration
         this.editor.setDecorations(tempDecorationType, this.decorations);
-        
+
         // 确保自动翻译的范围可见，但不改变光标位置
         // Ensure auto-translated range is visible, but don't change cursor position
         this.editor.revealRange(
             this.lastTranslatedRange,
             vscode.TextEditorRevealType.InCenterIfOutsideViewport
         );
-        
+
         logger.info('翻译装饰器应用成功 / Translation decoration applied successfully');
     }
-    
+
     /**
      * 计数器用于控制清理过期缓存的频率
      * Counter to control the frequency of clearing expired cache
      */
     private static cacheCleanupCounter = 0;
-    
+
     /**
      * 检查并清理过期缓存
      * Check and clear expired cache
@@ -360,7 +376,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             this.TranslationService.clearExpiredCache();
         }
     }
-    
+
     /**
      * 提供代码操作 (小灯泡💡)
      * Provide code actions
@@ -374,11 +390,11 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         if (range.isEmpty) {
             return [];
         }
-        
+
         // 创建翻译代码操作
         // Create translation code action
         const translateAction = new vscode.CodeAction(
-            '$(globe) Translate',
+            'Translate',
             vscode.CodeActionKind.RefactorRewrite
         );
 
@@ -386,14 +402,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             title: '翻译选中文本',
             command: 'gopp.translateSelection'
         };
-        
+
         // 设置高优先级，使其在小灯泡菜单中更靠前显示
         // Set high priority to make it appear higher in the lightbulb menu
         translateAction.isPreferred = true;
-        
+
         return [translateAction];
     }
-    
+
     /**
      * 处理活动编辑器变更
      * Handle active editor change
@@ -405,9 +421,9 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             logger.info('编辑器为空，无法处理活动编辑器变更 / Editor is null, cannot handle active editor change');
             return;
         }
-        
+
         this.editor = editor;
-        
+
         // 延迟一点时间再执行，确保编辑器已完全加载
         // Delay execution a bit to ensure editor is fully loaded
         setTimeout(() => {
@@ -426,11 +442,11 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         // Only handle document changes in the current active editor
         if (this.editor && event.document === this.editor.document) {
             logger.debug(`文档内容变更: ${event.document.fileName} / Document content changed`);
-            
+
             // 清除已翻译注释缓存，因为文档内容变更可能导致注释位置变化
             // Clear translated comments cache as document content changes may cause comment positions to change
             this.translatedComments.clear();
-            
+
             // 使用防抖动处理，避免频繁翻译
             // Use debounce to avoid frequent translations
             this.debouncedTranslateVisibleContent();
@@ -443,7 +459,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private debouncedTranslateVisibleContent = debounce(() => {
         this.translateVisibleContent();
-    }, 1000); // 1秒钟的防抖动延迟 / 1 second debounce delay
+    }, 5000); // 5秒钟的防抖动延迟 / 1 second debounce delay
 
     /**
      * 处理窗口滚动事件
@@ -451,7 +467,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private handleEditorScroll(): void {
         if (!this.editor) return;
-        
+
         // 使用防抖动技术处理滚动事件
         // Use debounce technique to handle scroll events
         this.debouncedTranslateVisibleContent();
@@ -509,75 +525,139 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         if (!this.editor) {
             return;
         }
-        
+
         logger.debug('开始翻译可见窗口的注释 / Starting to translate visible comments');
-        
+
         // 显示状态信息
         // Show status message
         const statusMessage = vscode.window.setStatusBarMessage('Translating visible comments...');
-        
+
         try {
             // 清除现有装饰 (除非指定不清除)
             // Clear existing decorations (unless specified not to)
             if (!dontClearDecorations) {
                 this.clearDecorations();
             }
-            
+
             // 1. 获取可视范围内的文本
             // 1. Get text within visible range
             const visibleRange = this.editor.visibleRanges[0];
             logger.debug(`可见范围: 行${visibleRange.start.line}-${visibleRange.end.line} / Visible range`);
-            
+
             // 2. 提取注释及其范围
             // 2. Extract comments and their ranges
             const comments = this.extractCommentsFromRange(this.editor.document, visibleRange);
-            
+
             // 统计新翻译的注释数
             // Count newly translated comments
             let newlyTranslatedCount = 0;
-            
-            // 3. 翻译每个注释并显示结果
-            // 3. Translate each comment and display results
-            for (const comment of comments) {
+
+            // 过滤掉已翻译的注释，只保留需要翻译的
+            // Filter out already translated comments, keep only those that need translation
+            const untranslatedComments = comments.filter(comment => {
                 const commentText = comment.text.trim();
-                if (!commentText) continue;
+                if (!commentText) return false;
+                return !this.isCommentAlreadyTranslated(comment.range);
+            });
+
+            // 如果没有需要翻译的注释，提前返回
+            // Return early if there are no comments to translate
+            if (untranslatedComments.length === 0) {
+                return;
+            }
+
+            // 更新状态栏信息
+            // Update status bar message
+            statusMessage.dispose();
+            const queueStatusMessage = vscode.window.setStatusBarMessage(
+                `ʕ◔ϖ◔ʔ queueing ${untranslatedComments.length}`
+            );
+
+            // 串行处理每个注释的翻译，确保不会同时发送太多请求
+            // Process translations serially to ensure we don't send too many requests at once
+            for (let i = 0; i < untranslatedComments.length; i++) {
+                const comment = untranslatedComments[i];
+                const commentText = comment.text.trim();
                 
-                // 检查该注释是否已经翻译过，如果已翻译则跳过
-                // Check if this comment has already been translated, skip if so
-                if (this.isCommentAlreadyTranslated(comment.range)) {
-                    logger.debug(`注释已翻译，跳过: "${commentText.substring(0, 20)}..." / Comment already translated, skipping`);
-                    continue;
+                queueStatusMessage.dispose();
+                const progressMessage = vscode.window.setStatusBarMessage(
+                    `ʕ◔ϖ◔ʔ Translating ${i+1}/${untranslatedComments.length}`
+                );
+
+                try {
+                    // 执行翻译 - 通过队列控制请求频率
+                    // Perform translation - control request rate through queue
+                    const translatedText = await this.translationQueue.enqueue(async () => {
+                        return await this.TranslationService.translate(
+                            commentText,
+                            this.config.targetLang,
+                            this.config.sourceLang,
+                        );
+                    });
+
+                    // 检查翻译结果是否为空
+                    // Check if translation result is empty
+                    if (!translatedText || translatedText === commentText) {
+                        logger.warn('Translation result is empty or same as original, skipping display');
+                        continue;
+                    }
+
+                    // 显示翻译结果
+                    // Display translation result
+                    this.showCommentTranslation(comment.range, translatedText);
+
+                    // 标记该注释为已翻译
+                    // Mark this comment as translated
+                    this.markCommentAsTranslated(comment.range);
+
+                    newlyTranslatedCount++;
+                } catch (error) {
+                    logger.error(`Failed to translate comment:`, error);
+                    
+                    // 如果因为请求限制失败，增加延迟后重试
+                    // If failed due to request limit, add delay and retry
+                    if (error.toString().includes('RequestLimitExceeded')) {
+                        logger.info('Request rate limit detected, pausing before retry');
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // 暂停2秒后重试 / Pause for 2 seconds before retry
+                        
+                        // 重试一次
+                        // Retry once
+                        try {
+                            const translatedText = await this.translationQueue.enqueue(async () => {
+                                return await this.TranslationService.translate(
+                                    commentText,
+                                    this.config.targetLang,
+                                    this.config.sourceLang,
+                                );
+                            });
+                            
+                            if (translatedText && translatedText !== commentText) {
+                                this.showCommentTranslation(comment.range, translatedText);
+                                this.markCommentAsTranslated(comment.range);
+                                newlyTranslatedCount++;
+                            }
+                        } catch (retryError) {
+                            logger.error(`Retry translation failed:`, retryError);
+                        }
+                    }
+                } finally {
+                    progressMessage.dispose();
                 }
                 
-                logger.debug(`翻译注释: "${commentText.substring(0, 20)}..." / Translating comment`);
-                
-                // 执行翻译
-                // Perform translation
-                const translatedText = await this.TranslationService.translate(
-                    commentText,
-                    this.config.targetLang,
-                    this.config.sourceLang,
-                );
-                
-                // 4. 在注释下方显示翻译结果
-                // 4. Display translation result below the comment
-                this.showCommentTranslation(comment.range, translatedText);
-                
-                // 5. 标记该注释为已翻译
-                // 5. Mark this comment as translated
-                this.markCommentAsTranslated(comment.range);
-                
-                newlyTranslatedCount++;
-                logger.debug('显示注释翻译 / Showing comment translation');
+                // 每个注释之间增加一个小延迟，进一步确保不会超出API速率限制
+                // Add a small delay between comments to further ensure we don't exceed API rate limits
+                await new Promise(resolve => setTimeout(resolve, 300));
             }
             
+            queueStatusMessage.dispose();
+
             if (!dontClearDecorations && newlyTranslatedCount > 0) {
-                vscode.window.showInformationMessage(`已翻译 ${newlyTranslatedCount} 条注释 / Translated ${newlyTranslatedCount} comments`);
+                vscode.window.showInformationMessage(`ok ${newlyTranslatedCount}`);
             }
         } catch (error) {
-            logger.error('翻译可见注释时出错 / Error translating visible comments:', error);
+            logger.error('Error translating visible comments:', error);
             if (!dontClearDecorations) {
-                vscode.window.showErrorMessage(`翻译注释失败: ${error} / Failed to translate comments`);
+                vscode.window.showErrorMessage(`Failed to translate comments`);
             }
         } finally {
             statusMessage.dispose();
@@ -592,23 +672,23 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      * @param range 范围 / Range
      * @returns 注释列表（文本和范围） / List of comments (text and range)
      */
-    private extractCommentsFromRange(document: vscode.TextDocument, range: vscode.Range): Array<{text: string, range: vscode.Range}> {
-        const comments: Array<{text: string, range: vscode.Range}> = [];
-        
+    private extractCommentsFromRange(document: vscode.TextDocument, range: vscode.Range): Array<{ text: string, range: vscode.Range }> {
+        const comments: Array<{ text: string, range: vscode.Range }> = [];
+
         // 简化：只检测单行注释和块注释的起止行
         // Simplified: only check for single-line comments and beginning/end of block comments
         const startLine = range.start.line;
         const endLine = range.end.line;
-        
+
         logger.debug(`扫描行范围: ${startLine}-${endLine} / Scanning line range`);
-        
+
         let inBlockComment = false;
         let blockCommentStart = 0;
         let blockCommentText = '';
-        
+
         for (let i = startLine; i <= endLine; i++) {
             const line = document.lineAt(i).text;
-            
+
             // 处理块注释
             // Handle block comments
             if (line.includes('/*') && !inBlockComment) {
@@ -617,29 +697,29 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 blockCommentText = line.substring(line.indexOf('/*') + 2);
                 continue;
             }
-            
+
             if (inBlockComment) {
                 if (line.includes('*/')) {
                     inBlockComment = false;
                     blockCommentText += '\n' + line.substring(0, line.indexOf('*/'));
-                    
+
                     const commentRange = new vscode.Range(
                         new vscode.Position(blockCommentStart, document.lineAt(blockCommentStart).text.indexOf('/*')),
                         new vscode.Position(i, line.indexOf('*/') + 2)
                     );
-                    
+
                     comments.push({
                         text: blockCommentText.trim(),
                         range: commentRange
                     });
-                    
+
                     blockCommentText = '';
                 } else {
                     blockCommentText += '\n' + line;
                 }
                 continue;
             }
-            
+
             // 处理单行注释
             // Handle single-line comments
             const lineCommentIndex = line.indexOf('//');
@@ -650,7 +730,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                         new vscode.Position(i, lineCommentIndex),
                         new vscode.Position(i, line.length)
                     );
-                    
+
                     comments.push({
                         text: commentText,
                         range: commentRange
@@ -658,7 +738,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
             }
         }
-        
+
         return comments;
     }
 
@@ -687,7 +767,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             const currentLineNumber = commentRange.start.line + i;
             const currentLine = this.editor.document.lineAt(currentLineNumber);
             const lineEndPos = currentLine.range.end;
-            
+
             // 创建只包含行末位置的范围
             // Create a range that only includes the end position of the line
             const decorationRange = new vscode.Range(lineEndPos, lineEndPos);
@@ -726,18 +806,18 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private isCommentAlreadyTranslated(range: vscode.Range): boolean {
         if (!this.editor) return false;
-        
+
         // 创建一个唯一键来标识注释
         // Create a unique key to identify the comment
         const document = this.editor.document;
         const commentText = document.getText(range);
         const key = `${document.fileName}:${range.start.line}:${range.start.character}:${commentText.substring(0, 100)}`;
-        
+
         // 检查是否在已翻译缓存中
         // Check if in translated cache
         return this.translatedComments.has(key);
     }
-    
+
     /**
      * 标记注释为已翻译
      * Mark comment as translated
@@ -746,13 +826,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private markCommentAsTranslated(range: vscode.Range): void {
         if (!this.editor) return;
-        
+
         // 创建一个唯一键来标识注释
         // Create a unique key to identify the comment
         const document = this.editor.document;
         const commentText = document.getText(range);
         const key = `${document.fileName}:${range.start.line}:${range.start.character}:${commentText.substring(0, 100)}`;
-        
+
         // 将注释标记为已翻译
         // Mark comment as translated
         this.translatedComments.set(key, true);
@@ -768,7 +848,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     public static register(context: vscode.ExtensionContext): TranslationProvider {
         const provider = new TranslationProvider(context);
-        
+
         // 注册代码操作提供程序
         // Register code action provider
         context.subscriptions.push(
@@ -777,7 +857,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 provider
             )
         );
-        
+
         // 注册翻译命令
         // Register translation command
         context.subscriptions.push(
@@ -786,7 +866,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 () => provider.translateSelection()
             )
         );
-        
+
         // 注册配置
         // Register configuration
         context.subscriptions.push(
@@ -802,7 +882,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
             )
         );
-        
+
         // 注册切换自动翻译命令
         // Register toggle auto translate command
         context.subscriptions.push(
@@ -813,19 +893,19 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                     // Toggle auto translation setting
                     const config = vscode.workspace.getConfiguration('gopp.translation');
                     const currentValue = config.get('autoTranslateOnActiveEditor', false);
-                    
+
                     logger.info(`切换自动翻译: ${currentValue} -> ${!currentValue} / Toggling auto translation`);
-                    
+
                     await config.update('autoTranslateOnActiveEditor', !currentValue, vscode.ConfigurationTarget.Global);
-                    
+
                     // 显示通知
                     // Show notification
                     vscode.window.showInformationMessage(
-                        !currentValue 
-                            ? '已启用自动翻译当前编辑窗口 / Auto translation enabled' 
+                        !currentValue
+                            ? '已启用自动翻译当前编辑窗口 / Auto translation enabled'
                             : '已禁用自动翻译 / Auto translation disabled'
                     );
-                    
+
                     // 如果启用了自动翻译，立即翻译当前编辑器内容
                     // If auto translation is enabled, immediately translate current editor content
                     if (!currentValue && vscode.window.activeTextEditor) {
@@ -835,25 +915,25 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
             )
         );
-        
+
         // 确保在插件激活时，自动翻译设置默认为开启
         // Ensure auto translation is enabled by default when extension is activated
         const config = vscode.workspace.getConfiguration('gopp.translation');
         const currentValue = config.get('autoTranslateOnActiveEditor', false);
-        
+
         // 如果当前设置为关闭，则设置为开启
         // If current setting is off, turn it on
         if (currentValue === false) {
             logger.info('初始化：启用自动翻译 / Initialization: enabling auto translation');
             config.update('autoTranslateOnActiveEditor', true, vscode.ConfigurationTarget.Global);
         }
-        
+
         return provider;
     }
 
     private faintColor(): string {
         return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
-             ? 'rgba(116, 127, 117, 0.4)' 
-             : 'rgba(48, 42, 42, 0.3)';
+            ? 'rgba(116, 127, 117, 0.4)'
+            : 'rgba(48, 42, 42, 0.3)';
     }
 }
