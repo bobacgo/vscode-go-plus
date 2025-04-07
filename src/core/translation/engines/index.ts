@@ -37,6 +37,7 @@ export interface TranslationEngineConfig {
     volcengineSecretAccessKey?: string;
     tencentSecretId?: string;
     tencentSecretKey?: string;
+    engineType?: string; // 引擎类型 / Engine type
 }
 
 /**

@@ -1,6 +1,7 @@
-import { TranslationOptions, TranslationResult } from './engine';
+import { TranslationOptions, TranslationResult } from './engines/engine';
 import { Logger } from '../../pkg/logger';
 import * as crypto from 'crypto';
+import * as vscode from 'vscode';
 import { 
     ENGINE_TYPES, 
     TranslationEngineConfig, 
@@ -15,23 +16,64 @@ const logger = Logger.withContext('TranslationService');
  * Translation service class
  */
 export class TranslationService {
-    // 引擎类型常量，从engines/index.ts导出
-    public static readonly ENGINE_TYPES = ENGINE_TYPES;
-    
+
     // 翻译缓存 - 使用Map进行高效存取
     // Translation cache - use Map for efficient access
-    private static translationCache = new Map<string, {
+    private translationCache = new Map<string, {
         result: string,
         timestamp: number
     }>();
     
-    // 缓存过期时间（毫秒） - 默认24小时
-    // Cache expiration time (ms) - default 24 hours
-    private static readonly CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
+    // 缓存过期时间（毫秒） - 默认 31 天
+    // Cache expiration time (ms) - default 31 days
+    private readonly CACHE_EXPIRATION = 31 * 24 * 60 * 60 * 1000;
     
     // 最大缓存条目数 - 防止内存溢出
     // Maximum cache entries - prevent memory overflow
-    private static readonly MAX_CACHE_SIZE = 1000;
+    private readonly MAX_CACHE_SIZE = 3000;
+
+    private configKey = 'gopp.translation';
+    private conf: TranslationEngineConfig;
+
+    constructor(context: vscode.ExtensionContext) {
+        const config = vscode.workspace.getConfiguration(this.configKey);
+        this.updateConfig(config);
+
+        // 订阅配置变更事件
+        // Subscribe to configuration change events
+        context.subscriptions.push(
+            vscode.workspace.onDidChangeConfiguration(this.handleConfigChange, this)
+        );
+    }
+
+    /**
+     * 处理配置变更事件
+     * Handle configuration change events
+     */
+    private handleConfigChange(event: vscode.ConfigurationChangeEvent) {
+        if (event.affectsConfiguration(this.configKey)) {
+            const config = vscode.workspace.getConfiguration(this.configKey);
+            this.updateConfig(config);
+        }
+    }
+
+    /**
+     * 更新配置
+     * Update configuration
+     * 
+     * @param config 新的配置 / New configuration
+     */
+    private updateConfig(config: vscode.WorkspaceConfiguration) {
+        this.conf = {
+            microsoftApiKey: config.microsoftApiKey,
+            googleApiKey: config.googleApiKey,
+            volcengineAccessKeyId: config.volcengineAccessKeyId,
+            volcengineSecretAccessKey: config.volcengineSecretAccessKey,
+            tencentSecretId: config.tencentSecretId,
+            tencentSecretKey: config.tencentSecretKey,
+            engineType: config.engineType,
+        }
+    }
     
     /**
      * 生成缓存键
@@ -43,7 +85,7 @@ export class TranslationService {
      * @param engineType 引擎类型 / Engine type
      * @returns 缓存键 / Cache key
      */
-    private static generateCacheKey(
+    private generateCacheKey(
         text: string,
         targetLang: string,
         sourceLang: string,
@@ -61,13 +103,12 @@ export class TranslationService {
      * @param key 缓存键 / Cache key
      * @returns 缓存的翻译结果，如果未命中缓存则返回null / Cached translation result, or null if cache miss
      */
-    private static getFromCache(key: string): string | null {
+    private getFromCache(key: string): string | null {
         const cached = this.translationCache.get(key);
         
         // 如果缓存存在且未过期，返回缓存结果
         // If cache exists and not expired, return cached result
         if (cached && (Date.now() - cached.timestamp) < this.CACHE_EXPIRATION) {
-            logger.debug('缓存命中 / Cache hit');
             return cached.result;
         }
         
@@ -88,7 +129,7 @@ export class TranslationService {
      * @param key 缓存键 / Cache key
      * @param result 翻译结果 / Translation result
      */
-    private static storeInCache(key: string, result: string): void {
+    private storeInCache(key: string, result: string): void {
         // 如果缓存太大，删除最旧的条目
         // If cache is too large, remove oldest entries
         if (this.translationCache.size >= this.MAX_CACHE_SIZE) {
@@ -119,7 +160,7 @@ export class TranslationService {
      * 清除过期缓存
      * Clear expired cache
      */
-    public static clearExpiredCache(): void {
+    public clearExpiredCache(): void {
         const now = Date.now();
         let removedCount = 0;
         
@@ -144,7 +185,7 @@ export class TranslationService {
      * @param text 原始文本 / Original text
      * @returns 处理后的文本 / Processed text
      */
-    private static preprocessMultilineText(text: string): string {
+    private preprocessMultilineText(text: string): string {
         // 修剪空白字符
         // Trim whitespace
         text = text.trim();
@@ -170,7 +211,7 @@ export class TranslationService {
      * @param text 要检测的文本 / Text to detect
      * @returns 可能的语言代码 / Possible language code
      */
-    public static detectLanguage(text: string): string {
+    public detectLanguage(text: string): string {
         // 简单检测：如果包含中文字符，假设是中文
         // Simple detection: if contains Chinese characters, assume it's Chinese
         const chinesePattern = /[\u4e00-\u9fa5]/;
@@ -185,32 +226,28 @@ export class TranslationService {
      * @param config 翻译配置 / Translation configuration
      * @returns 实际使用的引擎 / Actual engine to use
      */
-    public static selectTranslationEngine(
-        userSelectedEngine: string,
-        config: TranslationEngineConfig
-    ): string {
+    public selectTranslationEngine(userSelectedEngine: string): string {
         // 如果不是自动模式，直接返回用户选择的引擎
         // If not in auto mode, directly return user selected engine
-        if (userSelectedEngine !== this.ENGINE_TYPES.AUTO) {
+        if (userSelectedEngine !== ENGINE_TYPES.AUTO) {
             return userSelectedEngine;
         }
         
         // 1. 检查是否有配置的API凭据可用，优先使用已配置的引擎
         // Check if there are configured API credentials available, prioritize configured engines
-        if (config.microsoftApiKey) {
-            return this.ENGINE_TYPES.MICROSOFT;
+        if (this.conf.googleApiKey) {
+            return ENGINE_TYPES.GOOGLE;
         }
-        if (config.googleApiKey) {
-            return this.ENGINE_TYPES.GOOGLE;
+        if (this.conf.microsoftApiKey) {
+            return ENGINE_TYPES.MICROSOFT;
         }
-        if (config.tencentSecretId && config.tencentSecretKey) {
-            return this.ENGINE_TYPES.TENCENT;
+        if (this.conf.tencentSecretId && this.conf.tencentSecretKey) {
+            return ENGINE_TYPES.TENCENT;
         }
-        if (config.volcengineAccessKeyId && config.volcengineSecretAccessKey) {
-            return this.ENGINE_TYPES.VOLCENGINE;
+        if (this.conf.volcengineAccessKeyId && this.conf.volcengineSecretAccessKey) {
+            return ENGINE_TYPES.VOLCENGINE;
         }
-        
-        return this.ENGINE_TYPES.AUTO;
+        return ENGINE_TYPES.AUTO;
     }
 
     /**
@@ -224,19 +261,17 @@ export class TranslationService {
      * @param config 翻译配置 / Translation configuration 
      * @returns 翻译后的文本 / Translated text
      */
-    public static async translate(
+    public async translate(
         text: string,
         targetLang: string = 'zh-CN',
         sourceLang: string = 'en',
-        engineType: string = this.ENGINE_TYPES.AUTO,
-        config: TranslationEngineConfig = {}
     ): Promise<string> {
         // 预处理文本 - 处理多行文本
         // Preprocess text - handle multi-line text
         text = this.preprocessMultilineText(text);
         
         // 智能选择翻译引擎 / Intelligently select translation engine
-        const actualEngineType = this.selectTranslationEngine(engineType, config);
+        const actualEngineType = this.selectTranslationEngine(this.conf.engineType);
         
         // 生成缓存键并尝试从缓存获取结果
         // Generate cache key and try to get result from cache
@@ -246,20 +281,11 @@ export class TranslationService {
         // 如果缓存命中，直接返回缓存结果
         // If cache hit, return cached result directly
         if (cachedResult !== null) {
-            // 添加日志，记录缓存命中时的键和值，便于调试
-            // Add log to record key and value on cache hit for debugging
-            logger.debug(`缓存命中[${text.substring(0, 20)}...]: "${cachedResult.substring(0, 40)}..." / Cache hit`);
             return cachedResult;
         }
         
-        // 如果实际使用的引擎与用户选择的不同且不是自动模式，记录信息
-        // If the actual engine differs from user selection and not in auto mode, log info
-        if (actualEngineType !== engineType && engineType !== this.ENGINE_TYPES.AUTO) {
-            logger.info(`自动切换翻译引擎: ${engineType} -> ${actualEngineType} / Automatically switched translation engine`);
-        }
-        
         // 创建翻译引擎实例
-        const engine = createTranslationEngine(actualEngineType, config);
+        const engine = createTranslationEngine(actualEngineType, this.conf);
         
         // 执行翻译
         // Perform translation
@@ -275,10 +301,6 @@ export class TranslationService {
         // 存入缓存
         // Store in cache
         this.storeInCache(cacheKey, result.text);
-        
-        // 添加日志，记录添加到缓存的内容，便于调试
-        // Add log to record content added to cache for debugging
-        logger.debug(`缓存添加[${text.substring(0, 20)}...]: "${result.text.substring(0, 40)}..." / Cache added`);
         
         return result.text;
     }

@@ -1,4 +1,4 @@
-import { TranslationEngine, TranslationOptions, TranslationResult } from '../engine';
+import { TranslationEngine, TranslationOptions, TranslationResult } from './engine';
 import { httpClient } from '../../../pkg/http';
 import { Logger } from '../../../pkg/logger';
 

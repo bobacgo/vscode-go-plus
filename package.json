@@ -139,6 +139,7 @@
           ],
           "description": "翻译引擎类型"
         },
+        
         "gopp.translation.sourceLanguage": {
           "type": "string",
           "default": "en",
@@ -152,44 +153,38 @@
         "gopp.translation.autoDetectLanguage": {
           "type": "boolean",
           "default": true,
-          "description": "自动检测源语言"
+          "description": "自动检测源语言(中-英文互译)"
         },
         "gopp.translation.autoTranslateOnActiveEditor": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "激活编辑器时自动翻译注释"
         },
         "gopp.translation.microsoftApiKey": {
           "type": "string",
-          "default": "",
           "description": "微软翻译API密钥",
           "password": true
         },
         "gopp.translation.googleApiKey": {
           "type": "string",
-          "default": "",
           "description": "谷歌翻译API密钥",
           "password": true
         },
         "gopp.translation.volcengineAccessKeyId": {
           "type": "string",
-          "default": "",
           "description": "火山翻译访问密钥ID（免费2百万字符/月）"
         },
         "gopp.translation.volcengineSecretAccessKey": {
           "type": "string",
-          "default": "",
           "description": "火山翻译密钥 https://console.volcengine.com/iam/identitymanage/user",
           "password": true
         },
         "gopp.translation.tencentSecretId": {
           "type": "string",
-          "default": "",
           "description": "腾讯翻译君密钥ID（免费5百万字符/月）"
         },
         "gopp.translation.tencentSecretKey": {
           "type": "string",
-          "default": "",
           "description": "腾讯翻译君密钥 https://console.cloud.tencent.com/cam/capi",
           "password": true
         }

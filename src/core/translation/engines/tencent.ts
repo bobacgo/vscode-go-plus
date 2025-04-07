@@ -1,6 +1,6 @@
-import { TranslationEngine, TranslationOptions, TranslationResult } from '../engine';
+import { TranslationEngine, TranslationOptions, TranslationResult } from './engine';
 import { Logger } from '../../../pkg/logger';
-import * as tencentcloud from "tencentcloud-sdk-nodejs-tmt";
+import { Client } from 'tencentcloud-sdk-nodejs-tmt/tencentcloud/services/tmt/v20180321/tmt_client';
 
 /**
  * Tencent Cloud Translator engine implementation using official SDK.
@@ -11,7 +11,7 @@ export class TencentTranslationEngine implements TranslationEngine {
     readonly name = 'Tencent Translator';
 
     private readonly logger = Logger.withContext('TencentTranslationEngine');
-    private readonly client: any;
+    private readonly client: Client;
     
     // 腾讯翻译支持的语言列表
     // List of languages supported by Tencent Translator
@@ -29,11 +29,7 @@ export class TencentTranslationEngine implements TranslationEngine {
         // 初始化 SDK 客户端
         // Initialize SDK client
         if (this.secretId && this.secretKey) {
-            try {
-                // 导入 TMT 模块
-                // Import TMT module
-                const TmtClient = tencentcloud.tmt.v20180321.Client;
-                
+            try {              
                 // 实例化客户端配置对象
                 // Instantiate client configuration object
                 const clientConfig = {
@@ -51,7 +47,7 @@ export class TencentTranslationEngine implements TranslationEngine {
                 
                 // 实例化 TMT 客户端
                 // Instantiate TMT client
-                this.client = new TmtClient(clientConfig);
+                this.client = new Client(clientConfig);
                 this.logger.info('腾讯翻译 SDK 客户端初始化成功 / Tencent translation SDK client initialized successfully');
             } catch (error) {
                 this.logger.error('腾讯翻译 SDK 客户端初始化失败 / Tencent translation SDK client initialization failed:', error);
@@ -98,14 +94,13 @@ export class TencentTranslationEngine implements TranslationEngine {
 
             // 转换语言代码以匹配腾讯云API
             // Convert language codes to match Tencent Cloud API
-            const sourceLanguage = this.convertToTencentLanguageCode(options.from || 'auto');
             const targetLanguage = this.convertToTencentLanguageCode(options.to);
 
             // 构建请求参数
             // Build request parameters
             const params = {
                 SourceText: text,
-                Source: sourceLanguage,
+                Source: "auto",
                 Target: targetLanguage,
                 ProjectId: 0  // 默认项目ID / Default project ID
             };
@@ -129,14 +124,14 @@ export class TencentTranslationEngine implements TranslationEngine {
             // If no translation result, return original text
             this.logger.warn('腾讯云翻译API未返回预期结果 / Tencent Cloud Translation API did not return expected result:', data);
             return {
-                text: `${text} (腾讯云翻译未返回结果 / Tencent Cloud translation returned no result)`,
+                text: `Tencent Cloud translation returned no result`,
                 from: options.from,
                 to: options.to
             };
         } catch (error) {
             this.logger.error('腾讯云翻译请求失败 / Tencent Cloud translation request failed:', error);
             return {
-                text: `${text} (腾讯云翻译失败: ${(error as Error).message} / Tencent Cloud translation failed)`,
+                text: `${(error as Error).message} / Tencent Cloud translation failed`,
                 from: options.from,
                 to: options.to
             };
