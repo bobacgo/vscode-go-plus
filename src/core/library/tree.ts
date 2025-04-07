@@ -67,6 +67,11 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
 		_context.subscriptions.push(
 			this._treeView,
 			vscode.languages.registerDefinitionProvider(['go'] as vscode.DocumentSelector, this),
+			// 添加文本编辑器变更事件监听
+			// Add text editor change event listener
+			vscode.window.onDidChangeActiveTextEditor(editor => {
+				this.syncTreeWithEditor(editor);
+			})
 		);
 	}
 
@@ -709,6 +714,141 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
 			const item = this._itemMap.get(fsPath)
 			if (item) {
 				await this._treeView?.reveal(item, { select: true, focus: false, expand: 1 });
+			}
+		}
+	}
+
+	/**
+	 * 同步树视图与编辑器
+	 * Synchronize tree view with editor
+	 * 
+	 * @param editor 活跃的文本编辑器
+	 */
+	private syncTreeWithEditor(editor?: vscode.TextEditor): void {
+		if (!editor || !this._treeView || !this._treeView.visible) {
+			return;
+		}
+
+		try {
+			const uri = editor.document.uri;
+			const filePath = uri.fsPath;
+			
+			// 只处理 Go 文件
+			// Only process Go files
+			if (!filePath.endsWith('.go')) {
+				return;
+			}
+
+			logger.debug(`同步树视图与编辑器: ${filePath}`);
+			
+			// 查找文件对应的树节点并聚焦
+			// Find corresponding tree node and focus on it
+			this.revealFileInTree(filePath);
+		} catch (error) {
+			logger.error('同步树视图与编辑器失败', error);
+		}
+	}
+
+	/**
+	 * 在树视图中显示文件
+	 * Reveal file in tree view
+	 * 
+	 * @param filePath 文件路径
+	 */
+	private async revealFileInTree(filePath: string): Promise<void> {
+		// 先检查是否在工作区项目中
+		// First check if file is in workspace project
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		if (!workspaceFolders) {
+			return;
+		}
+
+		// 查找路径匹配的模块项
+		// Find module item matching the path
+		for (const mod of this._modCmdInfos) {
+			if (filePath.startsWith(path.dirname(mod.GoMod))) {
+				// 这是项目中的文件，先展开模块节点
+				// This is a file in the project, first expand module node
+				const uri = vscode.Uri.file(TreeLabel.Modules).with({scheme: 'modules'});
+				const modulesItem = this._itemMap.get(uri.fsPath);
+				if (modulesItem) {
+					await this._treeView!.reveal(modulesItem, { select: false, focus: false, expand: 1 });
+				}
+				
+				// 查找项目中的文件节点
+				// Find file node in project
+				const relativePath = filePath.substring(path.dirname(mod.GoMod).length).split(path.sep).filter(Boolean);
+				await this.revealTreePath(path.dirname(mod.GoMod), relativePath);
+				return;
+			}
+		}
+
+		// 查找依赖项中的文件
+		// Find file in dependencies
+		for (const dep of this._depCmdInfos) {
+			if (filePath.startsWith(dep.Dir)) {
+				// 是依赖中的文件
+				// It's a file in dependency
+				const rootNode = dep.Indirect ? this._indirectDependencyItem : this._dependencyItem;
+				if (rootNode) {
+					await this._treeView!.reveal(rootNode, { select: false, focus: false, expand: 1 });
+					
+					// 先定位到依赖项根节点
+					// First locate dependency root node
+					const depItem = this._itemMap.get(dep.Dir);
+					if (depItem) {
+						await this._treeView!.reveal(depItem, { select: false, focus: false, expand: 1 });
+						
+						// 然后按相对路径定位
+						// Then locate by relative path
+						const relativePath = filePath.substring(dep.Dir.length).split(path.sep).filter(Boolean);
+						await this.revealTreePath(dep.Dir, relativePath);
+					}
+				}
+				return;
+			}
+		}
+
+		// 可能是标准库中的文件
+		// Might be a file in standard library
+		if (this._sdkItem && filePath.startsWith(this._sdkItem.resourceUri.fsPath)) {
+			await this._treeView!.reveal(this._sdkItem, { select: false, focus: false, expand: 1 });
+			
+			const relativePath = filePath.substring(this._sdkItem.resourceUri.fsPath.length).split(path.sep).filter(Boolean);
+			await this.revealTreePath(this._sdkItem.resourceUri.fsPath, relativePath);
+		}
+	}
+
+	/**
+	 * 按路径层次展开并定位树节点
+	 * Expand and locate tree nodes by path hierarchy
+	 * 
+	 * @param basePath 基础路径
+	 * @param pathParts 路径部分
+	 */
+	private async revealTreePath(basePath: string, pathParts: string[]): Promise<void> {
+		if (!this._treeView || pathParts.length === 0) {
+			return;
+		}
+
+		let currentPath = basePath;
+		
+		// 逐层定位
+		// Locate level by level
+		for (let i = 0; i < pathParts.length; i++) {
+			currentPath = path.join(currentPath, pathParts[i]);
+			const item = this._itemMap.get(currentPath);
+			
+			if (item) {
+				// 最后一个路径部分选中但不展开
+				// Select but don't expand the last path part
+				const isLastPart = i === pathParts.length - 1;
+				const expand = isLastPart ? 0 : 1;
+				await this._treeView.reveal(item, { select: isLastPart, focus: isLastPart, expand });
+			} else {
+				// 如果找不到节点，可能需要先展开父节点以加载下一级节点
+				// If node not found, may need to expand parent node to load next level nodes
+				break;
 			}
 		}
 	}
