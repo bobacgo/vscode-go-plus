@@ -612,7 +612,7 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
 		
 		// 单行导入
 		// Single line import
-		const singleImportMatch = /import\s+["']([^"']+)["']/.exec(line);
+		const singleImportMatch = /import\s+(?:[^\s]+\s+)?["']([^"']+)["']/.exec(line);
 		if (singleImportMatch && this.isPositionInRange(position, line.indexOf(singleImportMatch[1]), singleImportMatch[1].length)) {
 			// 先规范化包路径，删除多余的斜线
 			// Normalize package path, remove extra slashes
@@ -621,7 +621,7 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
 		
 		// 多行导入中的一行
 		// Line in multi-line import
-		const multiImportMatch = /^\s*["']([^"']+)["']/.exec(line);
+		const multiImportMatch = /^\s*(?:[^\s]+\s+)?["']([^"']+)["']/.exec(line);
 		if (multiImportMatch && this.isInsideMultiLineImport(document, position)) {
 			// 先规范化包路径，删除多余的斜线
 			// Normalize package path, remove extra slashes
