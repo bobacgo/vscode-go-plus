@@ -30,6 +30,9 @@ jobs:
           npm run lint
           npm test
         
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+        
       - name: Package Extension
         run: npm run package
         
