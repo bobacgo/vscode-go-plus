@@ -19,9 +19,9 @@ export async function findReferences(document: vscode.TextDocument, line: number
         if (symbolStart === -1) {
             return [];
         }
-        
+
         const position = new vscode.Position(line, symbolStart + Math.floor(symbol.length / 2));
-        
+
         // 获取所有引用
         // 获取所有引用
         const refs = await vscode.commands.executeCommand<vscode.Location[]>(
@@ -29,11 +29,11 @@ export async function findReferences(document: vscode.TextDocument, line: number
             document.uri,
             position
         ) || [];
-        
+
         // 过滤掉自身的引用
         // Filter out self-reference
-        return refs.filter(ref => 
-            ref.uri.toString() !== document.uri.toString() || 
+        return refs.filter(ref =>
+            ref.uri.toString() !== document.uri.toString() ||
             !ref.range.contains(position)
         );
     } catch (error) {
@@ -52,12 +52,12 @@ export async function findReferences(document: vscode.TextDocument, line: number
  * @returns 其他引用位置 (other reference location)
  */
 export function getOtherReferenceLocation(
-    refs: vscode.Location[], 
-    currentLine: number, 
+    refs: vscode.Location[],
+    currentLine: number,
     currentUri: vscode.Uri
 ): vscode.Location | undefined {
-    return refs.find(ref => 
-        ref.uri.toString() !== currentUri.toString() || 
+    return refs.find(ref =>
+        ref.uri.toString() !== currentUri.toString() ||
         ref.range.start.line !== currentLine
     );
 }

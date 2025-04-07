@@ -9,17 +9,17 @@ import { GoLibraryTreeData } from './core/library/tree';  // 导入Go Library树
 
 /*
 
-          ,_---~~~~~----._         
-   _,,_,*^____      _____``*g*\"*, 
-  / __/ /'     ^.  /      \ ^@q   f 
- [  @f | @))    |  | @))   l  0 _/  
-  \`/   \~____ / __ \_____/    \   
-   |           _l__l_           I   
-   }          [______]           I  
-   ]            | | |            |  
-   ]             ~ ~             |  
-   |                            |   
-    |                           | 
+          ,_---~~~~~----._
+   _,,_,*^____      _____``*g*\"*,
+  / __/ /'     ^.  /      \ ^@q   f
+ [  @f | @))    |  | @))   l  0 _/
+  \`/   \~____ / __ \_____/    \
+   |           _l__l_           I
+   }          [______]           I
+   ]            | | |            |
+   ]             ~ ~             |
+   |                            |
+    |                           |
 
  */
 
@@ -39,13 +39,13 @@ const registeredCommands = new Set<string>();
 function registerCommandSafely(context: vscode.ExtensionContext, commandId: string, handler: (...args: any[]) => any): void {
     // 规范化命令ID
     const normalizedId = commandId.startsWith('gopp.') ? `gopp.${commandId.substring(5)}` : commandId;
-    
+
     // 检查命令是否已注册
     if (registeredCommands.has(normalizedId)) {
         console.warn(`跳过重复注册的命令: ${normalizedId} / Skipping duplicate command registration: ${normalizedId}`);
         return;
     }
-    
+
     // 注册命令并记录
     const disposable = vscode.commands.registerCommand(normalizedId, handler);
     context.subscriptions.push(disposable);
@@ -63,11 +63,11 @@ export function activate(context: vscode.ExtensionContext) {
     try {
         // 创建状态栏项目 - 使用新模块
         workspaceNavigatorStatusBarItem = Home.createStatusBarItem(context);
-        
+
         context.subscriptions.push(
             DisposeCodeLensProvider(context),
             ...DisposeCommands(context) // 注册命令
-        )
+        );
 
         // Go Library 树视图实例
         const goLibraryTreeData = new GoLibraryTreeData(context);
@@ -121,12 +121,12 @@ export function activate(context: vscode.ExtensionContext) {
  */
 export function deactivate() {
     logger.info('正在停用gopp');
-    
+
     // 调用Go Library的deactivate函数
     if (goLibraryDeactivate) {
         goLibraryDeactivate();
     }
-    
+
     // 清理资源
     if (workspaceNavigatorStatusBarItem) {
         workspaceNavigatorStatusBarItem.dispose();

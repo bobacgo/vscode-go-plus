@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { SplitMultipleJson } from "../../pkg/parser";
+import { SplitMultipleJson } from '../../pkg/parser';
 import { Logger } from '../../pkg/logger';
 
 const logger = Logger.withContext('library/mod');
@@ -35,7 +35,7 @@ export interface DependencyCmdInfo {
 
 export class Dependencies {
 
-    command: string = 'go list -m -json all'; // 当前工作空间目录所有模块总依赖
+    command = 'go list -m -json all'; // 当前工作空间目录所有模块总依赖
 
     cwd: string; // 工作空间目录
 

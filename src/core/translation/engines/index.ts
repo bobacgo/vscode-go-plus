@@ -43,21 +43,21 @@ export interface TranslationEngineConfig {
 /**
  * Creates a translation engine instance based on the specified type and configuration.
  * 根据指定的类型和配置创建翻译引擎实例。
- * 
+ *
  * @param type 引擎类型 / Engine type
  * @param config 引擎配置 / Engine configuration
  * @returns 翻译引擎实例 / Translation engine instance
  */
 export function createTranslationEngine(type: string, config: TranslationEngineConfig) {
     switch (type) {
-        case ENGINE_TYPES.MICROSOFT:
-            return new MicrosoftTranslationEngine(config.microsoftApiKey);
-        case ENGINE_TYPES.GOOGLE:
-            return new GoogleTranslationEngine(config.googleApiKey);
-        case ENGINE_TYPES.VOLCENGINE:
-            return new VolcengineTranslationEngine(config.volcengineAccessKeyId, config.volcengineSecretAccessKey);
-        default:
-            return new TencentTranslationEngine(config.tencentSecretId, config.tencentSecretKey);
+    case ENGINE_TYPES.MICROSOFT:
+        return new MicrosoftTranslationEngine(config.microsoftApiKey);
+    case ENGINE_TYPES.GOOGLE:
+        return new GoogleTranslationEngine(config.googleApiKey);
+    case ENGINE_TYPES.VOLCENGINE:
+        return new VolcengineTranslationEngine(config.volcengineAccessKeyId, config.volcengineSecretAccessKey);
+    default:
+        return new TencentTranslationEngine(config.tencentSecretId, config.tencentSecretKey);
     }
 }
 

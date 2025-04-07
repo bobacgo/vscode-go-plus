@@ -4,7 +4,7 @@ import { runInThisContext } from 'vm';
 import { Logger } from './logger';
 import { getResourceUri } from './resource';
 
-const logger = Logger.withContext("pkg/wasm");
+const logger = Logger.withContext('pkg/wasm');
 
 /**
  * Enumeration of Go WASM exported function names
@@ -13,15 +13,15 @@ const logger = Logger.withContext("pkg/wasm");
 export enum GoWasmFunction {
     // Parse go.mod file to JSON
     // 解析 go.mod 文件为 JSON
-    ParseModFunc = "ParseModFunc",
-    
+    ParseModFunc = 'ParseModFunc',
+
     // Parse AST
     // 解析 AST
-    ParseAst = "ParseAst",
-    
+    ParseAst = 'ParseAst',
+
     // Format Go code
     // 格式化 Go 代码
-    FormatCode = "FormatCode"
+    FormatCode = 'FormatCode'
 }
 
 /**
@@ -32,17 +32,17 @@ export class WasmExecutor {
     // Cache for wasm instances to improve performance
     // 缓存 wasm 实例以提高性能
     private static instance: WebAssembly.Instance | null = null;
-    private static initialized: boolean = false;
-    
+    private static initialized = false;
+
     // Constants for paths
     // 路径常量
-    private static readonly WASM_EXEC_PATH = "bin/wasm_exec.js";
-    private static readonly WASM_MODULE_PATH = "bin/cgo.wasm";
+    private static readonly WASM_EXEC_PATH = 'bin/wasm_exec.js';
+    private static readonly WASM_MODULE_PATH = 'bin/cgo.wasm';
 
     /**
      * Initialize and run a WASM module
      * 初始化并运行WASM模块
-     * 
+     *
      * @param ctx Extension context 扩展上下文
      * @returns Promise that resolves when the WASM module is initialized
      */
@@ -50,10 +50,10 @@ export class WasmExecutor {
         // Check if Go runtime is available, load it if not
         // 检查Go运行时是否可用，如果不可用则加载
         if (!(globalThis as any).Go) {
-            const wasmExecCode = fs.readFileSync(getResourceUri(ctx, this.WASM_EXEC_PATH).fsPath, "utf-8");
+            const wasmExecCode = fs.readFileSync(getResourceUri(ctx, this.WASM_EXEC_PATH).fsPath, 'utf-8');
             runInThisContext(wasmExecCode);
         }
-        
+
         // Check if module is already initialized
         // 检查模块是否已初始化
         if (WasmExecutor.initialized) {
@@ -63,14 +63,14 @@ export class WasmExecutor {
         const wasmUri = getResourceUri(ctx, this.WASM_MODULE_PATH);
         const wasmBytes = fs.readFileSync(wasmUri.fsPath);
         const go = new (globalThis as any).Go();
-        
+
         // Use async instantiation for better performance
         // 使用异步实例化提高性能
         if (!WasmExecutor.instance) {
             try {
                 const { instance } = await WebAssembly.instantiate(wasmBytes, go.importObject);
                 WasmExecutor.instance = instance;
-                
+
                 // Run the WASM module to register functions
                 // 运行WASM模块以注册函数
                 go.run(instance);
@@ -81,19 +81,19 @@ export class WasmExecutor {
             }
         }
     }
-    
+
     /**
      * Call a function exposed by a WASM module
      * 调用WASM模块暴露的函数
-     * 
+     *
      * @param ctx Extension context 扩展上下文
      * @param functionName Name of the function to call 要调用的函数名称
      * @param args Arguments to pass to the function 要传递给函数的参数
      * @returns Result of the function call 函数调用结果
      */
     public static async callFunction<T>(
-        ctx: vscode.ExtensionContext, 
-        functionName: GoWasmFunction, 
+        ctx: vscode.ExtensionContext,
+        functionName: GoWasmFunction,
         ...args: any[]
     ): Promise<T> {
         try {
@@ -102,7 +102,7 @@ export class WasmExecutor {
             if (!WasmExecutor.initialized) {
                 await this.initWasm(ctx);
             }
-            
+
             // Get registered function from global object
             // 从全局对象中获取注册的函数
             const func = (globalThis as any)[functionName];
@@ -110,7 +110,7 @@ export class WasmExecutor {
                 logger.warn(`Function ${functionName} not found in WASM module`);
                 throw new Error(`Function ${functionName} not found`);
             }
-            
+
             // Call the function with provided arguments
             // 使用提供的参数调用函数
             return func(...args) as T;

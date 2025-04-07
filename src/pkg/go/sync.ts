@@ -1,10 +1,10 @@
-import { ErrorGroup } from "./wait_group";
+import { ErrorGroup } from './wait_group';
 
 export class sync {
 
     /**
        const group = new ErrorGroup(2); // Limit to 2 concurrent tasks
-        
+
         for (let i = 1; i <= 5; i++) {
             const taskId = i;
             group.Go(async () => {
@@ -14,7 +14,7 @@ export class sync {
                 return null; // No error
             });
         }
-        
+
         await group.wait();
      */
     public static ErrorGroup(limit: number | null = null): ErrorGroup {

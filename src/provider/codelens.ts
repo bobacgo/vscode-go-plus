@@ -33,17 +33,17 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
      */
     constructor(private context: vscode.ExtensionContext) {
         logger.debug('初始化 GoCodeLensProvider');
-        
+
         // 添加文件监听器和防抖优化
         // Add file watcher with debounce optimization
         const watcher = vscode.workspace.createFileSystemWatcher('**/*.go');
-        
+
         // 当文件变化时更新监听
         // Update when files change
         watcher.onDidChange(() => this.debounceUpdate());
         watcher.onDidCreate(() => this.debounceUpdate());
         watcher.onDidDelete(() => this.debounceUpdate());
-        
+
         // 文档变化监听优化
         // Document change listener optimization
         vscode.workspace.onDidChangeTextDocument((e) => {
@@ -52,13 +52,13 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 this.debounceUpdate();
             }
         });
-        
+
         // 活动编辑器变化时触发更新
         // Trigger update when active editor changes
         vscode.window.onDidChangeActiveTextEditor(() => {
             this._onDidChangeCodeLenses.fire();
         });
-        
+
         context.subscriptions.push(watcher);
 
         // 定期清理缓存（可选）
@@ -116,21 +116,21 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
 
             // 处理 Main 函数
             // Process Main function
-            const parser = new GoFileParser(document)
-            const lines = parser.getLines()
+            const parser = new GoFileParser(document);
+            const lines = parser.getLines();
 
             const mainFunctionLine = parser.findMainFunction();
             if (mainFunctionLine >= 0) {
                 const range = new vscode.Range(mainFunctionLine, 0, mainFunctionLine, lines[mainFunctionLine].length);
-                
+
                 // 添加Run CodeLens - 使用上次保存的参数运行
                 // Add Run CodeLens - run with previously saved args
                 this.codeLenses.push(Run(range, document.uri));
-                
+
                 // 添加Debug CodeLens - 使用上次保存的参数调试
                 // Add Debug CodeLens - debug with previously saved args
                 this.codeLenses.push(Debug(range, document.uri));
-                
+
                 // 添加Args CodeLens - 设置运行参数
                 // Add Args CodeLens - set run arguments
                 this.codeLenses.push(Args(range, document.uri));
@@ -142,16 +142,16 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
             // 处理 const 全局常量
             // 显示 r
             parser.onConstFunc = (i, constName) => {
-                const range = new vscode.Range(i, 0, i, lines[i].length); 
+                const range = new vscode.Range(i, 0, i, lines[i].length);
                 R(document, constName, i, range, this.codeLenses);
-            }
+            };
 
             // 处理 var 全局变量
             // 显示 r
             parser.onValFunc = (i, varName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
                 R(document, varName, i, range, this.codeLenses);
-            }
+            };
 
             // 处理 func - 在测试文件中不显示函数的测试生成按钮
             // 显示 r、g
@@ -159,7 +159,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
                 R(document, funcName, i, range, this.codeLenses);
                 G(document, i, range, this.codeLenses); // 生成测试用例
-            }
+            };
 
             // 处理 interface
             // 显示 r、i
@@ -167,7 +167,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
                 R(document, interfaceName, i, range, this.codeLenses);
                 I(document, interfaceName, IToType.ToStruct, i, range, this.codeLenses); // 接口到结构体
-            }
+            };
 
             // 处理 interface 包含的方法
             // 显示 r、i
@@ -175,7 +175,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
                 R(document, methodName, i, range, this.codeLenses);
                 I(document, methodName, IToType.ToStruct, i, range, this.codeLenses, interfaceName); // 接口方法到结构体方法
-            }
+            };
 
             // 处理 struct
             // 显示 r、i、g
@@ -186,7 +186,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 // 解析结构体字段
                 const structFields = parser.getStructFields(i); // 解析结构体字段
                 G(document, i, range, this.codeLenses, structName, structFields); // 生成测试用例
-            }
+            };
 
             // 处理 struct 包含的方法
             // 显示 r、i、g
@@ -195,7 +195,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 R(document, methodName, i, range, this.codeLenses);
                 I(document, methodName, IToType.ToStructMethod, i, range, this.codeLenses); // 结构体方法到接口方法
                 G(document, i, range, this.codeLenses); // 生成测试用例
-            }
+            };
 
             parser.scan();
 
@@ -223,7 +223,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 version: document.version,
                 codeLenses: this.codeLenses
             });
-            
+
             return this.codeLenses;
         } catch (error) {
             logger.error('生成 CodeLens 时发生错误', error);
@@ -246,12 +246,12 @@ export function DisposeCodeLensProvider(context: vscode.ExtensionContext) : vsco
         scheme: 'file'
     };
 
-        // 注册调试会话终止事件，清理临时调试文件
+    // 注册调试会话终止事件，清理临时调试文件
     // Register debug session termination event to clean up temporary debug files
     vscode.debug.onDidTerminateDebugSession((session) => {
         cleanupDebugBinaries();
     });
-    
+
     return vscode.languages.registerCodeLensProvider(
         goFilePattern,
         new GoCodeLensProvider(context)

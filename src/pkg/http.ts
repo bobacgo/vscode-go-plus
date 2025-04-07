@@ -7,7 +7,7 @@ export class httpClient {
     /**
      * 发送HTTP请求的辅助函数
      * Helper function to send HTTP requests
-     * 
+     *
      * @param url 请求URL / Request URL
      * @param options 请求选项 / Request options
      * @param data 请求数据 / Request data
@@ -97,7 +97,7 @@ export class httpClient {
     /**
      * 封装GET请求
      * Wrap GET request
-     * 
+     *
      * @param url 请求URL / Request URL
      * @param options 请求选项 / Request options
      * @returns Promise<T> 响应数据 / Response data
@@ -110,7 +110,7 @@ export class httpClient {
     /**
      * 封装POST请求
      * Wrap POST request
-     * 
+     *
      * @param url 请求URL / Request URL
      * @param data 请求数据 / Request data
      * @param options 请求选项 / Request options
@@ -124,7 +124,7 @@ export class httpClient {
     /**
      * 转换查询参数到URL字符串
      * Convert query parameters to URL string
-     * 
+     *
      * @param params 查询参数对象 / Query parameters object
      * @returns URL查询字符串 / URL query string
      */

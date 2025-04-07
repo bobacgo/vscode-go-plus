@@ -19,20 +19,20 @@ export class VolcengineTranslationEngine implements TranslationEngine {
     private readonly supportedLanguages: string[] = [
         'zh', 'zh-Hant', 'en', 'ja', 'ko', 'fr', 'de', 'es', 'ru', 'pt', 'ar', 'it', 'hi'
     ];
-    
+
     /**
      * 不参与加签过程的 header key
      * Header keys that don't participate in the signing process
      */
     private readonly HEADER_KEYS_TO_IGNORE = new Set([
-        "authorization",
-        "content-type",
-        "content-length",
-        "user-agent",
-        "presigned-expires",
-        "expect",
+        'authorization',
+        'content-type',
+        'content-length',
+        'user-agent',
+        'presigned-expires',
+        'expect',
     ]);
-    
+
     constructor(
         private readonly accessKeyId?: string,
         private readonly secretAccessKey?: string
@@ -45,7 +45,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
      * 检查引擎是否支持指定的语言对。
      */
     supportsLanguagePair(from: string, to: string): boolean {
-        return this.supportedLanguages.includes(this.convertToVolcengineLanguageCode(from)) && 
+        return this.supportedLanguages.includes(this.convertToVolcengineLanguageCode(from)) &&
                this.supportedLanguages.includes(this.convertToVolcengineLanguageCode(to));
     }
 
@@ -68,7 +68,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             if (!this.accessKeyId || !this.secretAccessKey) {
                 this.logger.warn('未提供火山引擎API凭据，无法执行翻译 / No Volcengine API credentials provided');
                 return {
-                    text: `Volcengine API credentials required`,
+                    text: 'Volcengine API credentials required',
                     from: options.from,
                     to: options.to
                 };
@@ -87,20 +87,20 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                 TargetLanguage: targetLanguage,
                 TextList: [text]
             };
-            
+
             if (sourceLanguage && sourceLanguage !== 'auto') {
                 requestBody.SourceLanguage = sourceLanguage;
             }
-            
+
             const bodyJson = JSON.stringify(requestBody);
-            
+
             // 构建签名参数
             const signParams = {
                 headers: {
                     // x-date header 是必传的，使用火山引擎格式的时间
-                    "X-Date": this.getDateTimeNow(),
-                    "Host": "open.volcengineapi.com",
-                    "Content-Type": "application/json"
+                    'X-Date': this.getDateTimeNow(),
+                    'Host': 'open.volcengineapi.com',
+                    'Content-Type': 'application/json'
                 },
                 method: 'POST',
                 query: {
@@ -114,7 +114,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                 region: this.region,
                 bodySha: this.hash(bodyJson)
             };
-            
+
             // 正规化 query object, 防止串化后出现 query 值为 undefined 情况
             for (const [key, val] of Object.entries(signParams.query)) {
                 if (val === undefined || val === null) {
@@ -122,19 +122,19 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                     (signParams.query as Record<string, string>)[key] = '';
                 }
             }
-            
+
             // 生成授权头
             const authorization = this.sign(signParams);
-            
+
             // 构建请求头
             const headers = {
                 ...signParams.headers,
                 'Authorization': authorization,
             };
-            
+
             // 发送请求
             const endpoint = `${this.apiUrl}/?${this.queryParamsToString(signParams.query)}`;
-            
+
             // 如果文本为空，直接返回
             if (!text.trim()) {
                 return {
@@ -143,7 +143,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                     to: options.to
                 };
             }
-            
+
             // 更新返回类型定义以匹配真实的响应格式
             const response = await httpClient.Post<{
                 TranslationList?: { Translation: string; DetectedSourceLanguage?: string; Extra?: any }[];
@@ -154,9 +154,9 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             // 提取翻译结果 - 更新处理逻辑以适应实际返回的数据结构
             if (response?.TranslationList?.length > 0) {
                 const translation = response.TranslationList[0].Translation;
-                
+
                 // 如果翻译结果是空字符串但原始文本不是空的，可能是API限制或错误
-                if (translation === "" && text.trim() !== "") {
+                if (translation === '' && text.trim() !== '') {
                     this.logger.warn('火山引擎翻译返回了空结果 / Volcengine returned empty translation result');
                     return {
                         text: text, // 返回原始文本
@@ -165,7 +165,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                         raw: response
                     };
                 }
-                
+
                 // 正常情况，返回翻译结果
                 this.logger.debug('火山引擎翻译成功 / Volcengine translation successful');
                 return {
@@ -175,20 +175,20 @@ export class VolcengineTranslationEngine implements TranslationEngine {
                     raw: response
                 };
             }
-            
+
             // 记录警告但使用更友好的消息格式
-            this.logger.warn('火山引擎翻译API返回了结果但格式不符合预期 / Volcengine Translation API returned unexpected format:', 
+            this.logger.warn('火山引擎翻译API返回了结果但格式不符合预期 / Volcengine Translation API returned unexpected format:',
                 JSON.stringify(response));
-            
+
             return {
-                text: `Volcengine translation returned invalid format`,
+                text: 'Volcengine translation returned invalid format',
                 from: options.from,
                 to: options.to
             };
         } catch (error) {
             this.logger.error('火山引擎翻译请求失败:', error);
             return {
-                text: `Volcengine translation failed`,
+                text: 'Volcengine translation failed',
                 from: options.from,
                 to: options.to
             };
@@ -201,10 +201,10 @@ export class VolcengineTranslationEngine implements TranslationEngine {
      */
     private convertToVolcengineLanguageCode(langCode?: string): string {
         if (!langCode) return 'auto';
-        
+
         // 火山引擎翻译API的语言代码映射
         const volcengineLangMap: Record<string, string> = {
-            'zh-CN': 'zh', 
+            'zh-CN': 'zh',
             'zh-TW': 'zh-Hant',
             'en': 'en',
             'ja': 'ja',
@@ -219,7 +219,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             'hi': 'hi',
             'auto': 'auto'
         };
-        
+
         return volcengineLangMap[langCode] || langCode;
     }
 
@@ -237,9 +237,9 @@ export class VolcengineTranslationEngine implements TranslationEngine {
         // 使用新实现的 queryParamsToString 和 getSignHeaders 方法
         const canonicalQueryString = this.queryParamsToString(query);
         const [signedHeaders, canonicalHeaders] = this.getSignHeaders(headers);
-        
+
         const payloadHash = this.hash(payload);
-        
+
         return [
             method.toUpperCase(),
             path,
@@ -261,7 +261,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             return v.toString(16);
         });
     }
-    
+
     /**
      * 签名函数 - 完全按照火山引擎示例实现
      * Sign function - implemented exactly according to Volcengine example
@@ -279,13 +279,13 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             needSignHeaderKeys = [],
             bodySha,
         } = params;
-        
-        const datetime = headers["X-Date"];
+
+        const datetime = headers['X-Date'];
         const date = datetime.substring(0, 8); // YYYYMMDD
-        
+
         // 创建正规化请求
         const [signedHeaders, canonicalHeaders] = this.getSignHeaders(headers, needSignHeaderKeys);
-        
+
         const canonicalRequest = [
             method.toUpperCase(),
             pathName,
@@ -294,29 +294,29 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             signedHeaders,
             bodySha || this.hash(''),
         ].join('\n');
-        
-        const credentialScope = [date, region, serviceName, "request"].join('/');
-        
+
+        const credentialScope = [date, region, serviceName, 'request'].join('/');
+
         // 创建签名字符串
-        const stringToSign = ["HMAC-SHA256", datetime, credentialScope, this.hash(canonicalRequest)].join('\n');
-        
+        const stringToSign = ['HMAC-SHA256', datetime, credentialScope, this.hash(canonicalRequest)].join('\n');
+
         // 计算签名
         const kDate = this.hmac(secretAccessKey, date);
         const kRegion = this.hmac(kDate, region);
         const kService = this.hmac(kRegion, serviceName);
-        const kSigning = this.hmac(kService, "request");
+        const kSigning = this.hmac(kService, 'request');
         const signature = this.hmac(kSigning, stringToSign).toString('hex');
-        
+
         this.logger.debug('生成火山引擎签名 / Generated Volcengine signature');
 
         return [
-            "HMAC-SHA256",
+            'HMAC-SHA256',
             `Credential=${accessKeyId}/${credentialScope},`,
             `SignedHeaders=${signedHeaders},`,
             `Signature=${signature}`,
         ].join(' ');
     }
-    
+
     /**
      * HMAC-SHA256 签名
      * HMAC-SHA256 signature
@@ -324,7 +324,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
     private hmac(secret: string | Buffer, s: string): Buffer {
         return crypto.createHmac('sha256', secret).update(s, 'utf8').digest();
     }
-    
+
     /**
      * SHA256 哈希
      * SHA256 hash
@@ -332,7 +332,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
     private hash(s: string): string {
         return crypto.createHash('sha256').update(s, 'utf8').digest('hex');
     }
-    
+
     /**
      * 查询参数转字符串 - 火山引擎实现
      * Query parameters to string - Volcengine implementation
@@ -357,7 +357,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             .filter((v) => v)
             .join('&');
     }
-    
+
     /**
      * 获取签名头 - 火山引擎实现
      * Get sign headers - Volcengine implementation
@@ -368,30 +368,30 @@ export class VolcengineTranslationEngine implements TranslationEngine {
         };
 
         let h = Object.keys(originHeaders);
-        
+
         // 根据 needSignHeaders 过滤
         if (Array.isArray(needSignHeaders) && needSignHeaders.length > 0) {
             const needSignSet = new Set([...needSignHeaders, 'x-date', 'host'].map((k) => k.toLowerCase()));
             h = h.filter((k) => needSignSet.has(k.toLowerCase()));
         }
-        
+
         // 根据 ignore headers 过滤
         h = h.filter((k) => !this.HEADER_KEYS_TO_IGNORE.has(k.toLowerCase()));
-        
+
         const signedHeaderKeys = h
             .slice()
             .map((k) => k.toLowerCase())
             .sort()
             .join(';');
-            
+
         const canonicalHeaders = h
             .sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1))
             .map((k) => `${k.toLowerCase()}:${trimHeaderValue(originHeaders[k])}`)
             .join('\n');
-            
+
         return [signedHeaderKeys, canonicalHeaders];
     }
-    
+
     /**
      * URI 编码 - 火山引擎实现
      * URI encoding - Volcengine implementation
@@ -405,7 +405,7 @@ export class VolcengineTranslationEngine implements TranslationEngine {
             return '';
         }
     }
-    
+
     /**
      * 获取当前格式化日期时间 - 火山引擎格式
      * Get current formatted date time - Volcengine format

@@ -13,24 +13,24 @@ export class TencentTranslationEngine implements TranslationEngine {
 
     private readonly logger = Logger.withContext('TencentTranslationEngine');
     private readonly client: Client;
-    
+
     // 腾讯翻译支持的语言列表
     // List of languages supported by Tencent Translator
     private readonly supportedLanguages: string[] = [
-        'zh', 'zh-TW', 'en', 'ja', 'ko', 'fr', 'es', 'it', 'de', 
+        'zh', 'zh-TW', 'en', 'ja', 'ko', 'fr', 'es', 'it', 'de',
         'tr', 'ru', 'pt', 'vi', 'id', 'th', 'ms', 'ar', 'hi'
     ];
-    
+
     constructor(
         private readonly secretId?: string,
         private readonly secretKey?: string
     ) {
         this.logger.debug('腾讯翻译引擎已初始化 / Tencent translation engine initialized');
-        
+
         // 初始化 SDK 客户端
         // Initialize SDK client
         if (this.secretId && this.secretKey) {
-            try {              
+            try {
                 // 实例化客户端配置对象
                 // Instantiate client configuration object
                 const clientConfig = {
@@ -38,14 +38,14 @@ export class TencentTranslationEngine implements TranslationEngine {
                         secretId: this.secretId,
                         secretKey: this.secretKey,
                     },
-                    region: "ap-guangzhou",
+                    region: 'ap-guangzhou',
                     profile: {
                         httpProfile: {
-                            endpoint: "tmt.tencentcloudapi.com",
+                            endpoint: 'tmt.tencentcloudapi.com',
                         },
                     },
                 };
-                
+
                 // 实例化 TMT 客户端
                 // Instantiate TMT client
                 this.client = new Client(clientConfig);
@@ -64,7 +64,7 @@ export class TencentTranslationEngine implements TranslationEngine {
      * Checks if the engine supports the specified language pair
      */
     supportsLanguagePair(from: string, to: string): boolean {
-        return this.supportedLanguages.includes(this.convertToTencentLanguageCode(from)) && 
+        return this.supportedLanguages.includes(this.convertToTencentLanguageCode(from)) &&
                this.supportedLanguages.includes(this.convertToTencentLanguageCode(to));
     }
 
@@ -87,7 +87,7 @@ export class TencentTranslationEngine implements TranslationEngine {
             if (!this.client) {
                 this.logger.warn('腾讯云翻译客户端未初始化，无法执行翻译 / Tencent Cloud translation client not initialized');
                 return {
-                    text: `Tencent Cloud API credentials required`,
+                    text: 'Tencent Cloud API credentials required',
                     from: options.from,
                     to: options.to
                 };
@@ -101,7 +101,7 @@ export class TencentTranslationEngine implements TranslationEngine {
             // Build request parameters
             const params = {
                 SourceText: text,
-                Source: "auto",
+                Source: 'auto',
                 Target: targetLanguage,
                 ProjectId: 0  // 默认项目ID / Default project ID
             };
@@ -109,7 +109,7 @@ export class TencentTranslationEngine implements TranslationEngine {
             // 使用 SDK 发送请求
             // Send request using SDK
             const data = await this.client.TextTranslate(params);
-            
+
             // 提取翻译结果
             // Extract translation result
             if (data && data.TargetText) {
@@ -120,12 +120,12 @@ export class TencentTranslationEngine implements TranslationEngine {
                     raw: data
                 };
             }
-            
+
             // 如果没有翻译结果，返回原文
             // If no translation result, return original text
             this.logger.warn('腾讯云翻译API未返回预期结果 / Tencent Cloud Translation API did not return expected result:', data);
             return {
-                text: `Tencent Cloud translation returned no result`,
+                text: 'Tencent Cloud translation returned no result',
                 from: options.from,
                 to: options.to
             };
@@ -145,7 +145,7 @@ export class TencentTranslationEngine implements TranslationEngine {
      */
     private convertToTencentLanguageCode(langCode?: string): string {
         if (!langCode) return 'auto';
-        
+
         // 腾讯云翻译API的语言代码映射
         // Tencent Cloud Translation API language code mapping
         const tencentLangMap: Record<string, string> = {
@@ -169,7 +169,7 @@ export class TencentTranslationEngine implements TranslationEngine {
             'hi': 'hi',
             'auto': 'auto'
         };
-        
+
         return tencentLangMap[langCode] || langCode;
     }
 }

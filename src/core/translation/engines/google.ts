@@ -15,7 +15,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
     private readonly supportedLanguages: string[] = [
         'en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'fr', 'de', 'es', 'ru', 'pt', 'it', 'ar', 'hi'
     ];
-    
+
     constructor(private readonly apiKey?: string) {
         this.logger.debug('谷歌翻译引擎已初始化 / Google translation engine initialized');
     }
@@ -25,7 +25,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
      * 检查引擎是否支持指定的语言对。
      */
     supportsLanguagePair(from: string, to: string): boolean {
-        return this.supportedLanguages.includes(this.convertToGoogleLanguageCode(from)) && 
+        return this.supportedLanguages.includes(this.convertToGoogleLanguageCode(from)) &&
                this.supportedLanguages.includes(this.convertToGoogleLanguageCode(to));
     }
 
@@ -48,7 +48,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
             if (!this.apiKey) {
                 this.logger.warn('未提供谷歌API密钥，无法执行翻译 / No Google API key provided, cannot perform translation');
                 return {
-                    text: `Google API key required`,
+                    text: 'Google API key required',
                     from: options.from,
                     to: options.to
                 };
@@ -67,7 +67,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
                 target: googleTargetLang,
                 format: 'text'
             };
-            
+
             // 发送POST请求
             // Send POST request
             const response = await httpClient.Post<{ data: { translations: { translatedText: string }[] } }>(
@@ -106,7 +106,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
      */
     private convertToGoogleLanguageCode(langCode?: string): string {
         if (!langCode) return 'en';
-        
+
         // 谷歌翻译API的语言代码映射
         const googleLangMap: Record<string, string> = {
             'zh-CN': 'zh',
@@ -119,7 +119,7 @@ export class GoogleTranslationEngine implements TranslationEngine {
             'es': 'es',
             'ru': 'ru'
         };
-        
+
         return googleLangMap[langCode] || langCode;
     }
 }

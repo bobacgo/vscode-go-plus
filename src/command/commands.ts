@@ -9,14 +9,14 @@ const logger = Logger.withContext('Commands');
 
 
 export function DisposeCommands(ctx : vscode.ExtensionContext) : Array<vscode.Disposable> {
-    registerGenerateCommands(ctx) // 注册生成命令
+    registerGenerateCommands(ctx); // 注册生成命令
     registerNavigationCommands(ctx); // 注册导航命令 TODO 移除
     return [
-        registerCommandOpenFolder("gopp.openFolder"), // 打开最近项目
-        registerCommandShowStructOptions("gopp.showStructOptions"), // 显示结构选项
-        registerCommandGenerateStructTags("gopp.generateStructTags"), // 生成结构体标签
-        registerCommandWorkspaceNavigator(ctx, "gopp.workspaceNavigator"), // 工作空间导航器
-        registerCommandFuncText("gopp.executeFunctionTest"), // 生成函数测试
+        registerCommandOpenFolder('gopp.openFolder'), // 打开最近项目
+        registerCommandShowStructOptions('gopp.showStructOptions'), // 显示结构选项
+        registerCommandGenerateStructTags('gopp.generateStructTags'), // 生成结构体标签
+        registerCommandWorkspaceNavigator(ctx, 'gopp.workspaceNavigator'), // 工作空间导航器
+        registerCommandFuncText('gopp.executeFunctionTest'), // 生成函数测试
     ];
 }
 
@@ -36,7 +36,7 @@ function registerCommandFuncText(cmd : string) : vscode.Disposable {
             // 调用 Go 插件的测试生成命令
             await vscode.commands.executeCommand('go.test.generate.function');
         }
-    })
+    });
 }
 
 /**
@@ -48,7 +48,7 @@ function registerCommandFuncText(cmd : string) : vscode.Disposable {
 function registerCommandWorkspaceNavigator(ctx : vscode.ExtensionContext, cmd : string) : vscode.Disposable {
     return vscode.commands.registerCommand(cmd, async () => {
         await Home.showNavigationMenu(ctx);
-    })
+    });
 }
 /**
  * 注册命令以生成结构体标签
@@ -91,19 +91,19 @@ function registerCommandGenerateStructTags(cmd : string) : vscode.Disposable {
                 const line = field.line;
                 const lineText = document.lineAt(line).text;
                 const currentTags = lineText.match(/`.*`$/);
-                
+
                 // 根据选择的格式转换字段名
-                let tagValue = formatType.value === 'camel' 
+                const tagValue = formatType.value === 'camel'
                     ? field.name.charAt(0).toLowerCase() + field.name.slice(1)
                     : field.name.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-                
+
                 const newTag = `${tagName}:"${tagValue}"`;
-                
+
                 if (currentTags) {
                     // 检查是否已存在相同的标签
                     const existingTags = currentTags[0].slice(1, -1);
                     const tagExists = new RegExp(`${tagName}:"[^"]*"`).test(existingTags);
-                    
+
                     if (!tagExists) {
                         // 已有其他标签，添加新标签
                         const updatedTags = `\`${existingTags} ${newTag}\``;
@@ -125,8 +125,8 @@ function registerCommandGenerateStructTags(cmd : string) : vscode.Disposable {
             const edit = new vscode.WorkspaceEdit();
             edit.set(document.uri, changes);
             await vscode.workspace.applyEdit(edit);
-        }    
-    })
+        }
+    });
 }
 
 /**

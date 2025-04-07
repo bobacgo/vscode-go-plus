@@ -17,7 +17,7 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
     private readonly supportedLanguages: string[] = [
         'en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'fr', 'de', 'es', 'ru', 'pt', 'it', 'ar', 'hi'
     ];
-    
+
     constructor(private readonly apiKey?: string) {
         this.logger.debug('微软翻译引擎已初始化 / Microsoft translation engine initialized');
     }
@@ -49,7 +49,7 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
             if (!this.apiKey) {
                 this.logger.warn('未提供API密钥，无法执行翻译 / No API key provided, cannot perform translation');
                 return {
-                    text: `Microsoft API key required`,
+                    text: 'Microsoft API key required',
                     from: options.from,
                     to: options.to
                 };
@@ -71,7 +71,7 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
                 'Ocp-Apim-Subscription-Region': this.region,
                 'Content-type': 'application/json',
             };
-            
+
             // 发送POST请求
             // Send POST request
             const response = await httpClient.Post<Array<{ translations: { text: string, to: string }[] }>>(

@@ -123,7 +123,7 @@ ${unselectedFields.map(field => `    ${field.name} ${field.type}`).join('\n')}
     const disposable = vscode.commands.registerCommand('gopp.generateInterfaceStubs',
         async (structName: string, filePath: string, line: number) => {
             // 查找所有接口
-            let workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             if (!workspacePath) {
                 return;
             }

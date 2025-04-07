@@ -252,10 +252,10 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 if (text.includes('\n') && text.length > 100) {
                     await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
-                        title: "Translating...",
+                        title: 'Translating...',
                         cancellable: false
                     }, async (progress) => {
-                        progress.report({ increment: 30, message: "Processing text..." });
+                        progress.report({ increment: 30, message: 'Processing text...' });
 
                         // 执行翻译
                         // Perform translation
@@ -265,13 +265,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                             sourceLang
                         );
 
-                        progress.report({ increment: 60, message: "更新显示... / Updating display..." });
+                        progress.report({ increment: 60, message: '更新显示... / Updating display...' });
 
                         // 为多行文本添加特殊显示
                         // Add special display for multi-line text
                         this.showTranslation(text, translatedText, true);
 
-                        progress.report({ increment: 10, message: "完成 / Done" });
+                        progress.report({ increment: 10, message: '完成 / Done' });
                     });
                 } else {
                     // 执行翻译 - 针对单行文本的常规处理
@@ -304,7 +304,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 显示翻译结果
      * Show translation result
-     * 
+     *
      * @param originalText 原文 / Original text
      * @param translatedText 翻译后的文本 / Translated text
      * @param isMultiline 是否多行 / Is multiline
@@ -324,7 +324,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
 
         // 确保显示时考虑多行情况
         // Make sure display handles multiline scenarios
-        let displayText = ` → ${translatedText} `;
+        const displayText = ` → ${translatedText} `;
 
         logger.debug(`翻译结果: ${displayText} / Translation result`);
 
@@ -413,7 +413,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 处理活动编辑器变更
      * Handle active editor change
-     * 
+     *
      * @param editor 新的活动编辑器 / New active editor
      */
     private handleActiveEditorChange(editor: vscode.TextEditor | undefined): void {
@@ -434,7 +434,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 处理文档内容变更
      * Handle document content change
-     * 
+     *
      * @param event 文档变更事件 / Document change event
      */
     private handleDocumentChange(event: vscode.TextDocumentChangeEvent): void {
@@ -518,7 +518,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 翻译当前可视窗口的注释
      * Translate comments in the visible editor area
-     * 
+     *
      * @param dontClearDecorations 不清除现有装饰 / Don't clear existing decorations
      */
     public async translateVisibleComments(dontClearDecorations = false): Promise<void> {
@@ -578,7 +578,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             for (let i = 0; i < untranslatedComments.length; i++) {
                 const comment = untranslatedComments[i];
                 const commentText = comment.text.trim();
-                
+
                 queueStatusMessage.dispose();
                 const progressMessage = vscode.window.setStatusBarMessage(
                     `ʕ◔ϖ◔ʔ Translating ${i+1}/${untranslatedComments.length}`
@@ -612,14 +612,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
 
                     newlyTranslatedCount++;
                 } catch (error) {
-                    logger.error(`Failed to translate comment:`, error);
-                    
+                    logger.error('Failed to translate comment:', error);
+
                     // 如果因为请求限制失败，增加延迟后重试
                     // If failed due to request limit, add delay and retry
                     if (error.toString().includes('RequestLimitExceeded')) {
                         logger.info('Request rate limit detected, pausing before retry');
                         await new Promise(resolve => setTimeout(resolve, 2000)); // 暂停2秒后重试 / Pause for 2 seconds before retry
-                        
+
                         // 重试一次
                         // Retry once
                         try {
@@ -630,25 +630,25 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                                     this.config.sourceLang,
                                 );
                             });
-                            
+
                             if (translatedText && translatedText !== commentText) {
                                 this.showCommentTranslation(comment.range, translatedText);
                                 this.markCommentAsTranslated(comment.range);
                                 newlyTranslatedCount++;
                             }
                         } catch (retryError) {
-                            logger.error(`Retry translation failed:`, retryError);
+                            logger.error('Retry translation failed:', retryError);
                         }
                     }
                 } finally {
                     progressMessage.dispose();
                 }
-                
+
                 // 每个注释之间增加一个小延迟，进一步确保不会超出API速率限制
                 // Add a small delay between comments to further ensure we don't exceed API rate limits
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
-            
+
             queueStatusMessage.dispose();
 
             if (!dontClearDecorations && newlyTranslatedCount > 0) {
@@ -657,7 +657,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         } catch (error) {
             logger.error('Error translating visible comments:', error);
             if (!dontClearDecorations) {
-                vscode.window.showErrorMessage(`Failed to translate comments`);
+                vscode.window.showErrorMessage('Failed to translate comments');
             }
         } finally {
             statusMessage.dispose();
@@ -667,7 +667,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 从文档范围中提取注释
      * Extract comments from document range
-     * 
+     *
      * @param document 文档 / Document
      * @param range 范围 / Range
      * @returns 注释列表（文本和范围） / List of comments (text and range)
@@ -745,7 +745,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 显示注释翻译
      * Show comment translation
-     * 
+     *
      * @param commentRange 注释范围 / Comment range
      * @param translatedText 翻译文本 / Translated text
      */
@@ -800,7 +800,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 检查注释是否已经翻译
      * Check if comment is already translated
-     * 
+     *
      * @param range 注释范围 / Comment range
      * @returns 是否已翻译 / Whether already translated
      */
@@ -821,7 +821,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     /**
      * 标记注释为已翻译
      * Mark comment as translated
-     * 
+     *
      * @param range 注释范围 / Comment range
      */
     private markCommentAsTranslated(range: vscode.Range): void {

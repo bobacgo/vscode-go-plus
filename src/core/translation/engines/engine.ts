@@ -45,7 +45,7 @@ export interface TranslationEngine {
     /**
      * Translates the given text according to the specified options.
      * 根据指定的选项翻译给定的文本。
-     * 
+     *
      * @param text - The text to translate / 要翻译的文本
      * @param options - Translation options / 翻译选项
      * @returns A promise that resolves to the translation result / 解析为翻译结果的 Promise
@@ -55,7 +55,7 @@ export interface TranslationEngine {
     /**
      * Checks if the engine supports the specified language pair.
      * 检查引擎是否支持指定的语言对。
-     * 
+     *
      * @param from - Source language / 源语言
      * @param to - Target language / 目标语言
      * @returns Whether the language pair is supported / 是否支持该语言对
@@ -65,7 +65,7 @@ export interface TranslationEngine {
     /**
      * Gets the list of supported languages by this engine.
      * 获取此引擎支持的语言列表。
-     * 
+     *
      * @returns A promise that resolves to an array of language codes / 解析为语言代码数组的 Promise
      */
     getSupportedLanguages(): Promise<string[]>;

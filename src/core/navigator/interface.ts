@@ -19,9 +19,9 @@ export async function findImplementations(document: vscode.TextDocument, line: n
         if (symbolStart === -1) {
             return [];
         }
-        
+
         const position = new vscode.Position(line, symbolStart + Math.floor(interfaceName.length / 2));
-        
+
         // 使用VSCode API获取实现
         const implementations = await vscode.commands.executeCommand<vscode.Location[]>(
             'vscode.executeImplementationProvider',
@@ -53,26 +53,26 @@ export async function findImplementedInterfaces(document: vscode.TextDocument, l
         if (symbolStart === -1) {
             return [];
         }
-        
+
         const position = new vscode.Position(line, symbolStart + Math.floor(structName.length / 2));
-        
+
         // 使用标准API获取可能的实现
         const implementations = await vscode.commands.executeCommand<vscode.Location[]>(
             'vscode.executeImplementationProvider',
             document.uri,
             position
         ) || [];
-        
+
         // 筛选可能是接口的引用
         const interfaceLocations: vscode.Location[] = [];
-        
+
         // 处理结果...
         for (const implementation of implementations) {
             try {
                 // 读取实现文档
                 const implDoc = await vscode.workspace.openTextDocument(implementation.uri);
                 const implLine = implDoc.lineAt(implementation.range.start.line).text.trim();
-                
+
                 // 检查是否可能是接口定义
                 if (implLine.includes('interface')) {
                     interfaceLocations.push(implementation);
@@ -81,7 +81,7 @@ export async function findImplementedInterfaces(document: vscode.TextDocument, l
                 console.error('处理实现时发生错误:', error);
             }
         }
-        
+
         logger.debug(`[接口查找] 结构体: ${structName}, 查找到接口数: ${interfaceLocations.length}`);
         return interfaceLocations;
     } catch (error) {
@@ -100,9 +100,9 @@ export async function findImplementedInterfaces(document: vscode.TextDocument, l
  * @returns 接口方法位置数组 (interface method location array)
  */
 export async function findMethodImplementedInterfaces(
-    document: vscode.TextDocument, 
-    line: number, 
-    methodName: string, 
+    document: vscode.TextDocument,
+    line: number,
+    methodName: string,
 ): Promise<vscode.Location[]> {
     try {
         // 获取符号所在位置
@@ -111,36 +111,36 @@ export async function findMethodImplementedInterfaces(
         if (symbolStart === -1) {
             return [];
         }
-        
+
         const position = new vscode.Position(line, symbolStart + Math.floor(methodName.length / 2));
-        
+
         // 使用引用查找功能先找到可能相关的所有引用
         const allRefs = await vscode.commands.executeCommand<vscode.Location[]>(
             'vscode.executeImplementationProvider',
             document.uri,
             position
         ) || [];
-        
+
         // 过滤出可能是接口方法的引用
         const interfaceMethods: vscode.Location[] = [];
-        
+
         for (const ref of allRefs) {
             // 不考虑当前文件的自引用
             if (ref.uri.toString() === document.uri.toString() && ref.range.start.line === line) {
                 continue;
             }
-            
+
             try {
                 // 读取引用所在文档
                 const refDoc = await vscode.workspace.openTextDocument(ref.uri);
                 const refLine = refDoc.lineAt(ref.range.start.line).text.trim();
-                
+
                 // 检查是否是接口方法声明
                 if (!refLine.startsWith('func') && refLine.includes(methodName) && !refLine.includes('struct')) {
                     // 向上查找接口声明
                     let lineIndex = ref.range.start.line;
                     let isInterface = false;
-                    
+
                     while (lineIndex >= 0) {
                         const checkLine = refDoc.lineAt(lineIndex).text.trim();
                         if (checkLine.includes('interface')) {
@@ -152,7 +152,7 @@ export async function findMethodImplementedInterfaces(
                         }
                         lineIndex--;
                     }
-                    
+
                     if (isInterface) {
                         interfaceMethods.push(ref);
                     }
@@ -161,7 +161,7 @@ export async function findMethodImplementedInterfaces(
                 console.error('检查方法引用时发生错误:', error);
             }
         }
-        
+
         logger.debug(`[方法实现查找] 方法: ${methodName}, 实现接口方法数: ${interfaceMethods.length}`);
         return interfaceMethods;
     } catch (error) {

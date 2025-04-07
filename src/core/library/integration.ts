@@ -13,20 +13,20 @@ const logger = Logger.withContext('GoLibrary');
 export const goLibraryModule = {
     activate: async (context: vscode.ExtensionContext): Promise<() => void> => {
         logger.info('Go Library 模块激活开始');
-        
+
         checkGo();
-        
+
         const modTreeProvider = new GoLibraryTreeData(context);
         modTreeProvider.watch();
-        
+
         // 注册命令
         registerGoModCommands(context, modTreeProvider);
-        
+
         // 设置上下文
         await vscode.commands.executeCommand('setContext', 'go.isExtensionActive', true);
         await vscode.commands.executeCommand('setContext', 'gomod.running', true);
         await vscode.commands.executeCommand('setContext', 'golibrary.running', true);
-        
+
         // 返回停用函数
         return () => {
             vscode.commands.executeCommand('setContext', 'go.isExtensionActive', false);

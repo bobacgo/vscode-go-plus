@@ -12,7 +12,7 @@ import { Logger } from '../../pkg/logger';
 */
 
 
-// 初始化日志实例 
+// 初始化日志实例
 // Initialize logger instance
 const logger = Logger.withContext('IssueReporter');
 
@@ -67,7 +67,7 @@ export interface IssueCreateRequest {
  */
 export class IssueManager {
     private static githubToken?: string;
-    private static repoFullName: string = 'bobacgo/vscode-go-plus';  // 默认仓库全名 / Default repo full name
+    private static repoFullName = 'bobacgo/vscode-go-plus';  // 默认仓库全名 / Default repo full name
 
     /**
      * 初始化 Issue 管理器
@@ -101,7 +101,7 @@ export class IssueManager {
 
                     if (match && match.length >= 2) {
                         this.repoFullName = match[1];
-                        
+
                         // 更新 API 路径
                         // Update API path
                         GITHUB_API.repoPath = `/repos/${this.repoFullName}`;
@@ -131,7 +131,7 @@ export class IssueManager {
             // 尝试从 VS Code 认证 API 获取 GitHub 令牌
             // Try to get GitHub token from VS Code authentication API
             const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: true });
-            
+
             if (session) {
                 this.githubToken = session.accessToken;
                 logger.info('成功获取 GitHub 令牌');
@@ -225,7 +225,7 @@ export class IssueManager {
             // 构建搜索查询
             // Build search query
             const encodedQuery = encodeURIComponent(`repo:${this.repoFullName} ${query}`);
-            
+
             // 尝试获取令牌，但不强制要求
             // Try to get token, but don't require it
             let token = '';
@@ -236,7 +236,7 @@ export class IssueManager {
                 // Searching can be done without a token, just might be rate-limited
                 logger.warn('未能获取 GitHub 令牌，搜索可能受限');
             }
-            
+
             const options = {
                 hostname: GITHUB_API.host,
                 port: 443,
@@ -264,7 +264,7 @@ export class IssueManager {
      * @param limit 返回数量限制 (Return count limit)
      * @returns Issues 列表 (Issues list)
      */
-    public static async getIssues(state: 'open' | 'closed' | 'all' = 'open', limit: number = 10): Promise<Issue[]> {
+    public static async getIssues(state: 'open' | 'closed' | 'all' = 'open', limit = 10): Promise<Issue[]> {
         try {
             // 尝试获取令牌，但不强制要求
             // Try to get token, but don't require it
@@ -274,7 +274,7 @@ export class IssueManager {
             } catch (e) {
                 logger.warn('未能获取 GitHub 令牌，获取 issues 可能受限');
             }
-            
+
             const options = {
                 hostname: GITHUB_API.host,
                 port: 443,
@@ -346,7 +346,7 @@ export class IssueManager {
      * Show feature feedback form
      */
     public static async showFeedbackForm(): Promise<void> {
-        this.initialize()
+        this.initialize();
         // 获取系统信息作为反馈模板
         // Get system info as feedback template
         const extensionVersion = vscode.extensions.getExtension('gopp.gopp')?.packageJSON.version || 'unknown';
@@ -469,10 +469,10 @@ export class IssueManager {
                 if (error.message && error.message.includes('无法获取 GitHub 令牌')) {
                     const loginAction = '登录 GitHub';
                     const result = await vscode.window.showErrorMessage(
-                        `提交反馈失败: 需要 GitHub 授权。请登录您的 GitHub 账号。`,
+                        '提交反馈失败: 需要 GitHub 授权。请登录您的 GitHub 账号。',
                         loginAction
                     );
-                    
+
                     if (result === loginAction) {
                         // 触发 VSCode 的 GitHub 登录流程
                         // Trigger VSCode's GitHub login flow
@@ -494,8 +494,8 @@ export class IssueManager {
      * @returns 生成的反馈内容 (Generated feedback content)
      */
     private static generateFeedbackBody(
-        feedbackType: string, 
-        feedbackTitle: string, 
+        feedbackType: string,
+        feedbackTitle: string,
         systemInfo: {extensionVersion: string; vscodeVersion: string; os: string}
     ): string {
         const templates: {[key: string]: string} = {
@@ -511,7 +511,7 @@ export class IssueManager {
                 `- VSCode 版本 (VSCode Version): ${systemInfo.vscodeVersion}`,
                 `- 操作系统 (Operating System): ${systemInfo.os}`
             ].join('\n'),
-            
+
             'enhancement': [
                 `# ${feedbackTitle}`,
                 '',
@@ -524,7 +524,7 @@ export class IssueManager {
                 `- VSCode 版本 (VSCode Version): ${systemInfo.vscodeVersion}`,
                 `- 操作系统 (Operating System): ${systemInfo.os}`
             ].join('\n'),
-            
+
             'question': [
                 `# ${feedbackTitle}`,
                 '',
@@ -538,7 +538,7 @@ export class IssueManager {
                 `- 操作系统 (Operating System): ${systemInfo.os}`
             ].join('\n')
         };
-        
+
         return templates[feedbackType] || templates['bug'];
     }
 }

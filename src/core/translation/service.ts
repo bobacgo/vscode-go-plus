@@ -2,10 +2,10 @@ import { TranslationOptions, TranslationResult } from './engines/engine';
 import { Logger } from '../../pkg/logger';
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { 
-    ENGINE_TYPES, 
-    TranslationEngineConfig, 
-    createTranslationEngine 
+import {
+    ENGINE_TYPES,
+    TranslationEngineConfig,
+    createTranslationEngine
 } from './engines';
 
 // 初始化日志实例
@@ -23,11 +23,11 @@ export class TranslationService {
         result: string,
         timestamp: number
     }>();
-    
+
     // 缓存过期时间（毫秒） - 默认 31 天
     // Cache expiration time (ms) - default 31 days
     private readonly CACHE_EXPIRATION = 31 * 24 * 60 * 60 * 1000;
-    
+
     // 最大缓存条目数 - 防止内存溢出
     // Maximum cache entries - prevent memory overflow
     private readonly MAX_CACHE_SIZE = 3000;
@@ -43,7 +43,7 @@ export class TranslationService {
         [ENGINE_TYPES.VOLCENGINE]: 20,
         [ENGINE_TYPES.TENCENT]: 50
     };
-    
+
     // 当前引擎计数器
     // Current engine counter
     private engineCounter = 0;
@@ -73,7 +73,7 @@ export class TranslationService {
     /**
      * 更新配置
      * Update configuration
-     * 
+     *
      * @param config 新的配置 / New configuration
      */
     private updateConfig(config: vscode.WorkspaceConfiguration) {
@@ -85,13 +85,13 @@ export class TranslationService {
             tencentSecretId: config.tencentSecretId,
             tencentSecretKey: config.tencentSecretKey,
             engineType: config.engineType,
-        }
+        };
     }
-    
+
     /**
      * 生成缓存键
      * Generate cache key
-     * 
+     *
      * @param text 要翻译的文本 / Text to translate
      * @param targetLang 目标语言 / Target language
      * @param sourceLang 源语言 / Source language
@@ -108,37 +108,37 @@ export class TranslationService {
             .update(`${text.trim()}|${targetLang}|${sourceLang}|${engineType}`)
             .digest('hex');
     }
-    
+
     /**
      * 从缓存获取翻译结果
      * Get translation result from cache
-     * 
+     *
      * @param key 缓存键 / Cache key
      * @returns 缓存的翻译结果，如果未命中缓存则返回null / Cached translation result, or null if cache miss
      */
     private getFromCache(key: string): string | null {
         const cached = this.translationCache.get(key);
-        
+
         // 如果缓存存在且未过期，返回缓存结果
         // If cache exists and not expired, return cached result
         if (cached && (Date.now() - cached.timestamp) < this.CACHE_EXPIRATION) {
             return cached.result;
         }
-        
+
         // 如果缓存已过期，删除它
         // If cache is expired, delete it
         if (cached) {
             logger.debug('缓存已过期，删除 / Cache expired, removing');
             this.translationCache.delete(key);
         }
-        
+
         return null;
     }
-    
+
     /**
      * 将翻译结果存入缓存
      * Store translation result into cache
-     * 
+     *
      * @param key 缓存键 / Cache key
      * @param result 翻译结果 / Translation result
      */
@@ -147,12 +147,12 @@ export class TranslationService {
         // If cache is too large, remove oldest entries
         if (this.translationCache.size >= this.MAX_CACHE_SIZE) {
             logger.debug('缓存已满，清理最旧条目 / Cache full, cleaning oldest entries');
-            
+
             // 获取所有缓存条目并按时间戳排序
             // Get all cache entries and sort by timestamp
             const entries = Array.from(this.translationCache.entries())
                 .sort((a, b) => a[1].timestamp - b[1].timestamp);
-            
+
             // 删除25%的最旧条目
             // Remove 25% of the oldest entries
             const entriesToRemove = Math.floor(this.MAX_CACHE_SIZE * 0.25);
@@ -160,7 +160,7 @@ export class TranslationService {
                 this.translationCache.delete(entries[i][0]);
             }
         }
-        
+
         // 存储新结果
         // Store new result
         this.translationCache.set(key, {
@@ -168,7 +168,7 @@ export class TranslationService {
             timestamp: Date.now()
         });
     }
-    
+
     /**
      * 清除过期缓存
      * Clear expired cache
@@ -176,7 +176,7 @@ export class TranslationService {
     public clearExpiredCache(): void {
         const now = Date.now();
         let removedCount = 0;
-        
+
         // 遍历所有缓存条目，删除过期的
         // Iterate all cache entries, remove expired ones
         for (const [key, value] of this.translationCache.entries()) {
@@ -185,16 +185,16 @@ export class TranslationService {
                 removedCount++;
             }
         }
-        
+
         if (removedCount > 0) {
             logger.debug(`已清除 ${removedCount} 条过期缓存 / Cleared ${removedCount} expired cache entries`);
         }
     }
-    
+
     /**
      * 预处理多行文本
      * Preprocess multiline text
-     * 
+     *
      * @param text 原始文本 / Original text
      * @returns 处理后的文本 / Processed text
      */
@@ -208,25 +208,25 @@ export class TranslationService {
         if (/^[^\w\s]+$/.test(text)) {
             return '';
         }
-        
+
         // 处理多行文本，保留适当的换行符
         // Handle multiline text, preserve appropriate line breaks
-        
+
         // 1. 合并过多的空行（超过2个连续空行的缩减为2个）
         // 1. Merge excessive empty lines (reduce more than 2 consecutive empty lines to 2)
         text = text.replace(/\n{3,}/g, '\n\n');
-        
+
         // 2. 移除每行开头和结尾的空白字符
         // 2. Remove whitespace at the beginning and end of each line
         text = text.split('\n').map(line => line.trim()).join('\n');
-        
+
         return text;
     }
 
     /**
      * 检测语言
      * Detect language
-     * 
+     *
      * @param text 要检测的文本 / Text to detect
      * @returns 可能的语言代码 / Possible language code
      */
@@ -240,7 +240,7 @@ export class TranslationService {
     /**
      * 智能选择翻译引擎
      * Intelligently select translation engine based on available configurations and weights
-     * 
+     *
      * @param userSelectedEngine 用户选择的引擎 / User selected engine
      * @returns 实际使用的引擎 / Actual engine to use
      */
@@ -250,11 +250,11 @@ export class TranslationService {
         if (userSelectedEngine !== ENGINE_TYPES.AUTO) {
             return userSelectedEngine;
         }
-        
+
         // 收集已配置的引擎
         // Collect configured engines
         const configuredEngines = [];
-        
+
         if (this.conf.microsoftApiKey) {
             configuredEngines.push({
                 type: ENGINE_TYPES.MICROSOFT,
@@ -279,23 +279,23 @@ export class TranslationService {
                 weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.TENCENT]
             });
         }
-        
+
         // 如果没有配置任何引擎，返回自动模式
         // If no engines configured, return auto mode
         if (configuredEngines.length === 0) {
             return ENGINE_TYPES.AUTO;
         }
-        
+
         // 基于权重随机选择引擎
         // Choose engine randomly based on weights
         let totalWeight = 0;
         for (const engine of configuredEngines) {
             totalWeight += engine.weight;
         }
-        
-        let randomValue = this.engineCounter % totalWeight;
+
+        const randomValue = this.engineCounter % totalWeight;
         this.engineCounter++;
-        
+
         let cumulativeWeight = 0;
         for (const engine of configuredEngines) {
             cumulativeWeight += engine.weight;
@@ -303,7 +303,7 @@ export class TranslationService {
                 return engine.type;
             }
         }
-        
+
         // 默认返回第一个配置的引擎
         // Default to the first configured engine
         return configuredEngines[0].type;
@@ -312,40 +312,40 @@ export class TranslationService {
     /**
      * 根据配置选择的引擎翻译文本
      * Translate text using the engine specified in configuration
-     * 
+     *
      * @param text 要翻译的文本 / Text to translate
      * @param targetLang 目标语言代码 / Target language code
      * @param sourceLang 源语言代码 / Source language code
      * @param engineType 翻译引擎类型 / Translation engine type
-     * @param config 翻译配置 / Translation configuration 
+     * @param config 翻译配置 / Translation configuration
      * @returns 翻译后的文本 / Translated text
      */
     public async translate(
         text: string,
-        targetLang: string = 'zh-CN',
-        sourceLang: string = 'en',
+        targetLang = 'zh-CN',
+        sourceLang = 'en',
     ): Promise<string> {
         // 预处理文本 - 处理多行文本
         // Preprocess text - handle multi-line text
         text = this.preprocessMultilineText(text);
-        
+
         // 智能选择翻译引擎 / Intelligently select translation engine
         const actualEngineType = this.selectTranslationEngine(this.conf.engineType);
-        
+
         // 生成缓存键并尝试从缓存获取结果
         // Generate cache key and try to get result from cache
         const cacheKey = this.generateCacheKey(text, targetLang, sourceLang, actualEngineType);
         const cachedResult = this.getFromCache(cacheKey);
-        
+
         // 如果缓存命中，直接返回缓存结果
         // If cache hit, return cached result directly
         if (cachedResult !== null) {
             return cachedResult;
         }
-        
+
         // 创建翻译引擎实例
         const engine = createTranslationEngine(actualEngineType, this.conf);
-        
+
         // 执行翻译
         // Perform translation
         const options: TranslationOptions = {
@@ -354,9 +354,9 @@ export class TranslationService {
             cache: true,
             timeout: 10000 // 10秒超时
         };
-        
+
         const result = await engine.translate(text, options);
-        
+
         // 存入缓存
         // Store in cache
         this.storeInCache(cacheKey, result.text);

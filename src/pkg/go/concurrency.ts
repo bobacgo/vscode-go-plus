@@ -1,7 +1,7 @@
 /**
  * Runs a function in a separate "goroutine" (asynchronous task).
  * 在单独的"协程"（异步任务）中运行函数。
- * 
+ *
  * @param fn - The function to execute asynchronously
  */
 export function go(fn: () => void | Promise<void>): void {

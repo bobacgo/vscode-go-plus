@@ -19,13 +19,13 @@ export class ErrorGroup {
      * Lock to protect access to the error variable
      * 保护错误变量访问的锁
      */
-    private errLock: boolean = false;
+    private errLock = false;
 
     /**
      * Semaphore for limiting concurrent executions
      * 用于限制并发执行数的信号量
      */
-    private activeTasks: number = 0;
+    private activeTasks = 0;
     private maxConcurrency: number | null = null;
     private taskQueue: Array<() => Promise<void>> = [];
 
@@ -48,7 +48,7 @@ export class ErrorGroup {
      */
     Go(fn: () => Error | null | Promise<Error | null>): void {
         this.wg.add(1);
-        
+
         const task = async () => {
             try {
                 const err = await fn();
@@ -81,7 +81,7 @@ export class ErrorGroup {
      * 如果队列中有任务，则调度下一个任务
      */
     private scheduleNext(): void {
-        if (this.taskQueue.length > 0 && 
+        if (this.taskQueue.length > 0 &&
             (this.maxConcurrency === null || this.activeTasks < this.maxConcurrency)) {
             this.activeTasks++;
             const nextTask = this.taskQueue.shift()!;
@@ -108,7 +108,7 @@ export class ErrorGroup {
      */
     private setError(err: Error): void {
         if (this.errLock) return;
-        
+
         this.errLock = true;
         if (!this.err) {
             this.err = err;
@@ -126,7 +126,7 @@ class WaitGroup {
      * The counter of unfinished tasks
      * 未完成任务的计数器
      */
-    private counter: number = 0;
+    private counter = 0;
 
     /**
      * Promise and its resolver for waiting
@@ -140,13 +140,13 @@ class WaitGroup {
      * 向 WaitGroup 计数器添加 delta。
      * @param delta - The number to add to the counter (default: 1)
      */
-    add(delta: number = 1): void {
+    add(delta = 1): void {
         if (delta < 0 && Math.abs(delta) > this.counter) {
             throw new Error('Negative delta would result in negative counter');
         }
-        
+
         this.counter += delta;
-        
+
         if (this.counter === 0 && this.resolver) {
             this.resolver();
             this.resolver = null;

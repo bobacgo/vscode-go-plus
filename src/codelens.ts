@@ -13,7 +13,7 @@ import { findReferences, getOtherReferenceLocation } from './core/navigator/refe
  */
 export function Run(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
-        title: "▶ Run",
+        title: '▶ Run',
         command: 'gopp.runMain',
         arguments: [uri]
     });
@@ -29,7 +29,7 @@ export function Run(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
  */
 export function Debug(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
-        title: "🐞 Debug",
+        title: '🐞 Debug',
         command: 'gopp.debugMain',
         arguments: [uri]
     });
@@ -45,7 +45,7 @@ export function Debug(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
  */
 export function Args(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
     return new vscode.CodeLens(range, {
-        title: "⚙ Args",
+        title: '⚙ Args',
         command: 'gopp.setMainArgs',
         arguments: [uri]
     });
@@ -62,18 +62,18 @@ export function Args(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
  * @param codeLenses CodeLens数组 (CodeLens array)
  */
 export async function G(
-    document: vscode.TextDocument, 
-    lineNumber: number, 
-    range: vscode.Range, 
+    document: vscode.TextDocument,
+    lineNumber: number,
+    range: vscode.Range,
     codeLenses: vscode.CodeLens[],
-    structName?: string, 
+    structName?: string,
     structFields?: any[]
 ) {
     if (!IsInWorkspace(document)) { // 如果不在工作空间中，则不显示按钮
         return;
     }
 
-    if (structName && structName !== "") {  // 是一个结构体
+    if (structName && structName !== '') {  // 是一个结构体
         const filePath = document.uri.fsPath;
         const fields = structFields || []; // 防止 structFields 为 undefined
         const opts = [
@@ -152,11 +152,11 @@ export const enum IToType {
  * @param receiverName 接收器名称 (receiver name)
  */
 export async function I(
-    document: vscode.TextDocument, 
-    name: string, 
-    to: IToType, 
-    lineNumber: number, 
-    range: vscode.Range, 
+    document: vscode.TextDocument,
+    name: string,
+    to: IToType,
+    lineNumber: number,
+    range: vscode.Range,
     codeLenses: vscode.CodeLens[],
     receiverName?: string
 ) {
@@ -168,7 +168,7 @@ export async function I(
     } else if (to === IToType.ToStructMethod) { // 查找结构体方法实现的接口方法
         locations = await findMethodImplementedInterfaces(document, lineNumber, name);
     }
-    
+
     if (locations.length > 0) {
         if (locations.length === 1) {
             // 如果只有一个实现，点击直接跳转
@@ -204,9 +204,9 @@ export async function I(
  * @param codeLenses CodeLens数组 (CodeLens array)
  */
 export async function R(
-    document: vscode.TextDocument, 
-    matchTxt: string, 
-    lineNumber: number, 
+    document: vscode.TextDocument,
+    matchTxt: string,
+    lineNumber: number,
     range: vscode.Range,
     codeLenses: vscode.CodeLens[]
 ) {
@@ -246,8 +246,8 @@ export async function R(
  * @returns 是否存在 (exists or not)
  */
 function hasCodeLensType(range: vscode.Range, type: 'Ⓖ'|'Ⓡ'|'Ⓘ', codeLenses: vscode.CodeLens[]): boolean {
-    return codeLenses.some(lens => 
-        lens.range.isEqual(range) && 
+    return codeLenses.some(lens =>
+        lens.range.isEqual(range) &&
         lens.command?.title.startsWith(type)
     );
 }
@@ -260,7 +260,7 @@ function hasCodeLensType(range: vscode.Range, type: 'Ⓖ'|'Ⓡ'|'Ⓘ', codeLense
  * @param codeLenses CodeLens数组 (CodeLens array)
  */
 function addCodeLens(
-    range: vscode.Range, 
+    range: vscode.Range,
     lens: {
         title: string;
         command: string;
