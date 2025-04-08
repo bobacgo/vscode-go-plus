@@ -45,15 +45,8 @@ install:
 # Publish extension to VSCode Marketplace
 publish:
 	@echo "正在发布扩展到插件市场... (Publishing extension to marketplace...)"
-	@if [ -z "$(VSCE_PAT)" ]; then \
-		echo "❌ 缺少发布令牌，请设置 VSCE_PAT 环境变量 (Missing publishing token, please set VSCE_PAT environment variable)"; \
-		echo "💡 获取令牌方法：https://code.visualstudio.com/api/working-with-extensions/publishing-extension"; \
-		exit 1; \
-	else \
-		vsce publish && \
-		echo "✅ 发布成功！插件已上传至 VSCode 插件市场 (Publication successful! Extension has been uploaded to VSCode Marketplace)" || \
-		echo "❌ 发布失败，请检查错误信息 (Publication failed, please check error messages)"; \
-	fi
+	npm version patch
+	git push --follow-tags
 
 # 清理构建文件
 # Clean build artifacts
