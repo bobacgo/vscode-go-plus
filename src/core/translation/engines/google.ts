@@ -108,6 +108,6 @@ export class GoogleTranslationEngine implements TranslationEngine {
         if (!langCode) return 'en';
         // 谷歌翻译API的语言代码映射
         if (langCode === 'zh') return 'zh-CN'; // 简体中文
-        return langCode.toLowerCase(); ;
+        return langCode.toLowerCase();
     }
 }

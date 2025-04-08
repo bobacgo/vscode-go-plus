@@ -44,7 +44,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         sourceLang: 'en',
         targetLang: 'zh',
         autoDetect: true,
-        autoTranslateOnActiveEditor: true,
+        autoTranslateOnActiveEditor: false,
     };
 
     private TranslationService: TranslationService;
@@ -60,6 +60,10 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     // 最大并发翻译请求数
     // Maximum number of concurrent translation requests
     private readonly MAX_CONCURRENT_TRANSLATIONS = 3;
+
+    // 添加一个翻译操作锁，防止重复调用
+    // Add a translation operation lock to prevent duplicate calls
+    private translationInProgress = false;
 
     /**
      * 构造函数
@@ -205,6 +209,15 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
+            return;
+        }
+
+        this.translationInProgress = true;
+
         try {
             const text = this.editor.document.getText(this.lastTranslatedRange);
             if (!text) {
@@ -298,6 +311,10 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         } catch (error) {
             logger.error('Translation failed:', error);
             vscode.window.showErrorMessage(`翻译失败: ${error}`);
+        } finally {
+            // 无论成功或失败，都释放锁
+            // Release lock regardless of success or failure
+            this.translationInProgress = false;
         }
     }
 
@@ -458,8 +475,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      * Debounced function to translate visible content
      */
     private debouncedTranslateVisibleContent = debounce(() => {
-        this.translateVisibleContent();
-    }, 5000); // 5秒钟的防抖动延迟 / 1 second debounce delay
+        // 确保不在翻译过程中再次调用
+        // Ensure not calling again while translation is in progress
+        if (!this.translationInProgress) {
+            this.translateVisibleContent();
+        } else {
+            logger.info('忽略防抖动调用，因为翻译正在进行中 / Ignoring debounced call as translation is in progress');
+        }
+    }, 5000); // 5秒钟的防抖动延迟 / 5 second debounce delay
 
     /**
      * 处理窗口滚动事件
@@ -467,6 +490,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private handleEditorScroll(): void {
         if (!this.editor) return;
+
+        // 如果已经在进行翻译，不要再次触发
+        // If translation is already in progress, don't trigger again
+        if (this.translationInProgress) {
+            logger.debug('滚动时忽略翻译，因为翻译正在进行中 / Ignoring translation on scroll as translation is in progress');
+            return;
+        }
 
         // 使用防抖动技术处理滚动事件
         // Use debounce technique to handle scroll events
@@ -480,6 +510,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     private translateVisibleContent(): void {
         if (!this.editor) {
             logger.info('编辑器为空，无法翻译当前可见内容 / Editor is null, cannot translate visible content');
+            return;
+        }
+
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
             return;
         }
 
@@ -526,6 +563,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
+            return;
+        }
+
+        this.translationInProgress = true;
         logger.debug('开始翻译可见窗口的注释 / Starting to translate visible comments');
 
         // 显示状态信息
@@ -661,6 +706,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             }
         } finally {
             statusMessage.dispose();
+            this.translationInProgress = false;
         }
     }
 
@@ -778,7 +824,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                     fontStyle: 'italic',
                     color: this.faintColor(),
                 },
-                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
+                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
             });
 
             // 应用装饰器 - 确保在行尾显示而不是插入到最后一个字符前
@@ -915,19 +961,6 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
             )
         );
-
-        // 确保在插件激活时，自动翻译设置默认为开启
-        // Ensure auto translation is enabled by default when extension is activated
-        const config = vscode.workspace.getConfiguration('gopp.translation');
-        const currentValue = config.get('autoTranslateOnActiveEditor', false);
-
-        // 如果当前设置为关闭，则设置为开启
-        // If current setting is off, turn it on
-        if (currentValue === false) {
-            logger.info('初始化：启用自动翻译 / Initialization: enabling auto translation');
-            config.update('autoTranslateOnActiveEditor', true, vscode.ConfigurationTarget.Global);
-        }
-
         return provider;
     }
 
