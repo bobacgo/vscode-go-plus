@@ -267,16 +267,16 @@ export class TranslationService {
                 weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.GOOGLE]
             });
         }
-        if (this.conf.volcengineAccessKeyId && this.conf.volcengineSecretAccessKey) {
-            configuredEngines.push({
-                type: ENGINE_TYPES.VOLCENGINE,
-                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.VOLCENGINE]
-            });
-        }
         if (this.conf.tencentSecretId && this.conf.tencentSecretKey) {
             configuredEngines.push({
                 type: ENGINE_TYPES.TENCENT,
                 weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.TENCENT]
+            });
+        }
+        if (this.conf.volcengineAccessKeyId && this.conf.volcengineSecretAccessKey) {
+            configuredEngines.push({
+                type: ENGINE_TYPES.VOLCENGINE,
+                weight: this.ENGINE_WEIGHTS[ENGINE_TYPES.VOLCENGINE]
             });
         }
 

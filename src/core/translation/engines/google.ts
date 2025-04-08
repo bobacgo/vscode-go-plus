@@ -9,7 +9,7 @@ import { Logger } from '../../../pkg/logger';
 export class GoogleTranslationEngine implements TranslationEngine {
     readonly id = 'google';
     readonly name = 'Google Translator';
-    readonly icon = 'G'
+    readonly icon = 'Ⓖ'
 
     private readonly logger = Logger.withContext('GoogleTranslationEngine');
     private readonly supportedLanguages: string[] = [
@@ -106,20 +106,8 @@ export class GoogleTranslationEngine implements TranslationEngine {
      */
     private convertToGoogleLanguageCode(langCode?: string): string {
         if (!langCode) return 'en';
-
         // 谷歌翻译API的语言代码映射
-        const googleLangMap: Record<string, string> = {
-            'zh-CN': 'zh',
-            'zh-TW': 'zh-TW',
-            'en': 'en',
-            'ja': 'ja',
-            'ko': 'ko',
-            'fr': 'fr',
-            'de': 'de',
-            'es': 'es',
-            'ru': 'ru'
-        };
-
-        return googleLangMap[langCode] || langCode;
+        if (langCode === 'zh') return 'zh-CN'; // 简体中文
+        return langCode.toLowerCase(); ;
     }
 }

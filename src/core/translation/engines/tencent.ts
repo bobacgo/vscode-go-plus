@@ -1,6 +1,6 @@
 import { TranslationEngine, TranslationOptions, TranslationResult } from './engine';
 import { Logger } from '../../../pkg/logger';
-import { Client } from 'tencentcloud-sdk-nodejs-tmt/tencentcloud/services/tmt/v20180321/tmt_client';
+import * as tencentcloud from 'tencentcloud-sdk-nodejs-tmt';
 
 /**
  * Tencent Cloud Translator engine implementation using official SDK.
@@ -9,10 +9,10 @@ import { Client } from 'tencentcloud-sdk-nodejs-tmt/tencentcloud/services/tmt/v2
 export class TencentTranslationEngine implements TranslationEngine {
     readonly id = 'tencent';
     readonly name = 'Tencent Translator';
-    readonly icon = 'T'
+    readonly icon = 'Ⓣ'
 
     private readonly logger = Logger.withContext('TencentTranslationEngine');
-    private readonly client: Client;
+    private readonly client: any;
 
     // 腾讯翻译支持的语言列表
     // List of languages supported by Tencent Translator
@@ -46,9 +46,13 @@ export class TencentTranslationEngine implements TranslationEngine {
                     },
                 };
 
+                // 导入 TMT 模块
+                // Import TMT module
+                const TmtClient = tencentcloud.tmt.v20180321.Client;
+
                 // 实例化 TMT 客户端
                 // Instantiate TMT client
-                this.client = new Client(clientConfig);
+                this.client = new TmtClient(clientConfig);
                 this.logger.info('腾讯翻译 SDK 客户端初始化成功 / Tencent translation SDK client initialized successfully');
             } catch (error) {
                 this.logger.error('腾讯翻译 SDK 客户端初始化失败 / Tencent translation SDK client initialization failed:', error);

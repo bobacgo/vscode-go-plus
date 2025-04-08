@@ -77,14 +77,14 @@ export class Home {
         // 定义菜单选项
         const options: vscode.QuickPickItem[] = [
             { label: '$(history) 最近打开的项目', description: '查看并打开最近的项目' },
-            { label: '$(settings-gear) 设置', description: 'Go Studio 相关配置选项' },
+            { label: '$(settings-gear) 设置Go ++', description: 'Go Studio 相关配置选项' },
             { label: '$(issue-opened) 报告问题', description: '创建 GitHub issue 报告问题或提出建议' }
         ];
 
         // 创建一个 Map 来存储额外数据
         const actionMap = new Map<string, { action: string }>();
         actionMap.set('$(history) 最近打开的项目', { action: 'recent' });
-        actionMap.set('$(settings-gear) 设置', { action: 'settings' });
+        actionMap.set('$(settings-gear) 设置Go ++', { action: 'settings' });
         actionMap.set('$(issue-opened) 报告问题', { action: 'issue' });
 
         // 显示 QuickPick 菜单
@@ -126,7 +126,7 @@ export class Home {
 
             case 'settings':
                 // 跳转到设置页面
-                await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:gopp.gopp');
+                await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:bobacgo.gopp');
                 break;
 
             case 'issue':

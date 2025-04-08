@@ -1,9 +1,9 @@
 {
   "name": "gopp",
   "displayName": "Go ++",
-  "description": "Enhance the experience of developing Go projects in VSCode",
+  "description": "Enhance the experience of developing Go projects in VSCode (Go++, Go ++, gopp)",
   "version": "0.1.2",
-  "publisher": "gopp",
+  "publisher": "bobacgo",
   "repository": {
     "type": "git",
     "url": "https://github.com/bobacgo/vscode-go-plus.git"
@@ -28,24 +28,28 @@
     "commands": [
       {
         "command": "gopp.generateCode",
-        "title": "Go++: 生成代码",
+        "title": "Go++: 生成代码 (Generate Code)",
         "icon": "$(add)"
       },
       {
         "command": "gopp.navigateToInterface",
-        "title": "Go++: Navigate to Interface"
+        "title": "Go++: Navigate to Interface (导航到接口)",
+        "icon": "$(references)"
       },
       {
         "command": "gopp.listInterfaceImplementations",
-        "title": "Go++: List Interface Implementations"
+        "title": "Go++: List Interface Implementations (列出接口实现)",
+        "icon": "$(list-tree)"
       },
       {
         "command": "gopp.listMethodImplementations",
-        "title": "Go++: List Method Implementations"
+        "title": "Go++: List Method Implementations (列出方法实现)",
+        "icon": "$(list-unordered)"
       },
       {
         "command": "gopp.navigateToInterfaceMethod",
-        "title": "Go++: Navigate to Interface Method"
+        "title": "Go++: Navigate to Interface Method (导航到接口方法)",
+        "icon": "$(go-to-file)"
       },
       {
         "command": "gopp.runMain",
@@ -57,15 +61,18 @@
       },
       {
         "command": "gopp.generateOptions",
-        "title": "Go++: 生成代码选项"
+        "title": "Go++: 生成代码选项 (Generate Code Options)",
+        "icon": "$(gear)"
       },
       {
         "command": "gopp.generateUnitTest",
-        "title": "Go++: 生成单元测试"
+        "title": "Go++: 生成单元测试 (Generate Unit Tests)",
+        "icon": "$(beaker)"
       },
       {
         "command": "gopp.generateOptionCode",
-        "title": "Go++: 生成 Option 代码"
+        "title": "Go++: 生成 Option 代码 (Generate Option Code)",
+        "icon": "$(symbol-parameter)"
       },
       {
         "command": "gopp.runMain",
@@ -89,18 +96,18 @@
       },
       {
         "command": "gopp.home",
-        "title": "Go: 打开工作空间导航器",
+        "title": "Go++: 打开工作空间导航器 (Open Workspace Navigator)",
         "category": "Go++",
         "icon": "$(project)"
       },
       {
         "command": "gopp.translateSettings",
-        "title": "Go++: 翻译设置",
+        "title": "Go++: 翻译设置 (Translation Settings)",
         "icon": "$(settings-gear)"
       },
       {
         "command": "gopp.workspaceNavigator",
-        "title": "Go++: 工作空间导航",
+        "title": "Go++: 工作空间导航 (Workspace Navigation)",
         "category": "Go++",
         "icon": "$(home)"
       }
@@ -142,12 +149,42 @@
         "gopp.translation.sourceLanguage": {
           "type": "string",
           "default": "en",
-          "description": "源语言代码"
+          "description": "源语言代码",
+          "enum": [
+            "en",
+            "zh",
+            "zh-TW",
+            "ja",
+            "ko",
+            "fr",
+            "de",
+            "es",
+            "ru",
+            "pt",
+            "ar",
+            "it",
+            "hi"
+          ]
         },
         "gopp.translation.targetLanguage": {
           "type": "string",
-          "default": "zh-CN",
-          "description": "目标语言代码"
+          "default": "zh",
+          "description": "目标语言代码",
+          "enum": [
+            "en",
+            "zh",
+            "zh-TW",
+            "ja",
+            "ko",
+            "fr",
+            "de",
+            "es",
+            "ru",
+            "pt",
+            "ar",
+            "it",
+            "hi"
+          ]
         },
         "gopp.translation.autoDetectLanguage": {
           "type": "boolean",
@@ -215,20 +252,41 @@
     "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
+    "@vscode/vsce": "^2.22.0",
     "eslint": "^7.32.0",
     "glob": "^7.1.6",
     "mocha": "^8.1.3",
     "typescript": "^4.1.2",
-    "vscode-test": "^1.6.1",
-    "@vscode/vsce": "^2.22.0"
+    "vscode-test": "^1.6.1"
   },
   "dependencies": {
-    "@alicloud/alimt20181012": "^1.3.0",
-    "@alicloud/openapi-client": "^0.4.13",
     "chokidar": "^3.6.0",
     "tencentcloud-sdk-nodejs-tmt": "^4.0.1027"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "Go",
+    "Go ++",
+    "Go++",
+    "golang",
+    "gopp",
+    "bobacgo",
+    "go language",
+    "go development",
+    "go tools",
+    "go productivity",
+    "go navigation",
+    "go interface",
+    "go implementation",
+    "go translation",
+    "go helper",
+    "go code generator",
+    "go unit test",
+    "go workspace",
+    "golang plus",
+    "go enhance",
+    "中文 go",
+    "go 中文"
+  ],
+  "author": "lanjin.wei",
   "license": "ISC"
 }

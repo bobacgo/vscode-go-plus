@@ -42,7 +42,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     // Configuration
     private config = {
         sourceLang: 'en',
-        targetLang: 'zh-CN',
+        targetLang: 'zh',
         autoDetect: true,
         autoTranslateOnActiveEditor: true,
     };
@@ -226,13 +226,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 if (detectedLang === 'zh-CN' || detectedLang === 'zh') {
                     // 如果检测到中文，就翻译成英文
                     // If Chinese is detected, translate to English
-                    sourceLang = 'zh-CN';
+                    sourceLang = 'zh';
                     targetLang = 'en';
                 } else if (detectedLang === 'en' || detectedLang.startsWith('en-')) {
                     // 如果检测到英文，就翻译成中文
                     // If English is detected, translate to Chinese
                     sourceLang = 'en';
-                    targetLang = 'zh-CN';
+                    targetLang = 'zh';
                 } else {
                     // 其他语言，使用配置中的默认设置
                     // For other languages, use default settings from configuration
@@ -324,7 +324,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
 
         // 确保显示时考虑多行情况
         // Make sure display handles multiline scenarios
-        const displayText = ` → ${translatedText} `;
+        const displayText = ` ${translatedText} `;
 
         logger.debug(`翻译结果: ${displayText} / Translation result`);
 
@@ -774,7 +774,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
 
             const lineDecorationType = vscode.window.createTextEditorDecorationType({
                 after: {
-                    contentText: ` → ${translatedLines[i]}`,
+                    contentText: ` ${translatedLines[i]}`,
                     fontStyle: 'italic',
                     color: this.faintColor(),
                 },
