@@ -46,7 +46,7 @@ jobs:
         # 只有在创建标签时才发布到市场
         # Only publish to marketplace when creating a tag
         if: startsWith(github.ref, 'refs/tags/v')
-        run: npm run publish
+        run: npx vsce publish --force -p ${{ secrets.VSCE_PAT }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           
