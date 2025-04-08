@@ -42,9 +42,9 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     // Configuration
     private config = {
         sourceLang: 'en',
-        targetLang: 'zh-CN',
+        targetLang: 'zh',
         autoDetect: true,
-        autoTranslateOnActiveEditor: true,
+        autoTranslateOnActiveEditor: false,
     };
 
     private TranslationService: TranslationService;
@@ -60,6 +60,10 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     // 最大并发翻译请求数
     // Maximum number of concurrent translation requests
     private readonly MAX_CONCURRENT_TRANSLATIONS = 3;
+
+    // 添加一个翻译操作锁，防止重复调用
+    // Add a translation operation lock to prevent duplicate calls
+    private translationInProgress = false;
 
     /**
      * 构造函数
@@ -133,9 +137,9 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     private loadConfig(): void {
         const config = vscode.workspace.getConfiguration(this.configKey);
         this.config = {
-            sourceLang: config.surceLanguage,
+            sourceLang: config.sourceLanguage,
             targetLang: config.targetLanguage,
-            autoDetect: config.autoDetect,
+            autoDetect: config.autoDetectLanguage,
             autoTranslateOnActiveEditor: config.autoTranslateOnActiveEditor,
         };
     }
@@ -196,6 +200,46 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     }
 
     /**
+     * 自动检测语言并确定翻译方向
+     * Auto detect language and determine translation direction
+     * @param text 需要检测的文本 (text to detect)
+     * @returns 源语言和目标语言 (source and target language)
+     */
+    private detectLanguageDirection(text: string): { sourceLang: string, targetLang: string } {
+        // 默认使用配置的语言
+        // Default to configured languages
+        let sourceLang = this.config.sourceLang;
+        let targetLang = this.config.targetLang;
+
+        // 如果启用了自动检测
+        // If auto-detection is enabled
+        if (this.config.autoDetect) {
+            const detectedLang = this.TranslationService.detectLanguage(text);
+            // 更智能的语言检测逻辑
+            // Smarter language detection logic
+            if (detectedLang === 'zh-CN' || detectedLang === 'zh') {
+                // 如果检测到中文，就翻译成英文
+                // If Chinese is detected, translate to English
+                sourceLang = 'zh';
+                targetLang = 'en';
+            } else if (detectedLang === 'en' || detectedLang.startsWith('en-')) {
+                // 如果检测到英文，就翻译成中文
+                // If English is detected, translate to Chinese
+                sourceLang = 'en';
+                targetLang = 'zh';
+            } else {
+                // 其他语言，使用配置中的默认设置
+                // For other languages, use default settings from configuration
+                logger.info(`使用默认语言设置: ${sourceLang} -> ${targetLang} / Using default language settings`);
+            }
+
+            logger.info(`翻译方向: ${sourceLang} -> ${targetLang} / Translation direction`);
+        }
+
+        return { sourceLang, targetLang };
+    }
+
+    /**
      * 翻译选中的文本
      * Translate selected text
      */
@@ -205,6 +249,15 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
+            return;
+        }
+
+        this.translationInProgress = true;
+
         try {
             const text = this.editor.document.getText(this.lastTranslatedRange);
             if (!text) {
@@ -212,35 +265,9 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 return;
             }
 
-            // 确定源语言和目标语言
-            // Determine source and target languages
-            let sourceLang = this.config.sourceLang;
-            let targetLang = this.config.targetLang;
-
-            // 如果启用了自动检测
-            // If auto-detection is enabled
-            if (this.config.autoDetect) {
-                const detectedLang = this.TranslationService.detectLanguage(text);
-                // 更智能的语言检测逻辑
-                // Smarter language detection logic
-                if (detectedLang === 'zh-CN' || detectedLang === 'zh') {
-                    // 如果检测到中文，就翻译成英文
-                    // If Chinese is detected, translate to English
-                    sourceLang = 'zh-CN';
-                    targetLang = 'en';
-                } else if (detectedLang === 'en' || detectedLang.startsWith('en-')) {
-                    // 如果检测到英文，就翻译成中文
-                    // If English is detected, translate to Chinese
-                    sourceLang = 'en';
-                    targetLang = 'zh-CN';
-                } else {
-                    // 其他语言，使用配置中的默认设置
-                    // For other languages, use default settings from configuration
-                    logger.info(`使用默认语言设置: ${sourceLang} -> ${targetLang} / Using default language settings`);
-                }
-
-                logger.info(`翻译方向: ${sourceLang} -> ${targetLang} / Translation direction`);
-            }
+            // 使用提取的方法检测语言方向
+            // Use extracted method to detect language direction
+            const { sourceLang, targetLang } = this.detectLanguageDirection(text);
 
             // 显示翻译状态信息
             // Show translation status message
@@ -298,6 +325,10 @@ export class TranslationProvider implements vscode.CodeActionProvider {
         } catch (error) {
             logger.error('Translation failed:', error);
             vscode.window.showErrorMessage(`翻译失败: ${error}`);
+        } finally {
+            // 无论成功或失败，都释放锁
+            // Release lock regardless of success or failure
+            this.translationInProgress = false;
         }
     }
 
@@ -311,20 +342,25 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private showTranslation(originalText: string, translatedText: string, isMultiline: boolean): void {
         if (!this.editor || !this.lastTranslatedRange) {
-            logger.info('编辑器或上次翻译范围为空，无法显示翻译');
+            logger.debug('编辑器或上次翻译范围为空，无法显示翻译');
             return;
         }
 
         // 确保翻译结果不为空
         // Ensure translation result is not empty
-        if (!translatedText || translatedText === originalText) {
+        if (!translatedText) {
             translatedText = 'Translation failed';
-            logger.warn('翻译结果为空或与原文相同');
+            logger.warn('翻译结果为空');
+        }
+
+        if (translatedText === originalText) {
+            logger.debug('翻译结果与原文相同，跳过显示');
+            return;
         }
 
         // 确保显示时考虑多行情况
         // Make sure display handles multiline scenarios
-        const displayText = ` → ${translatedText} `;
+        const displayText = ` ${translatedText} `;
 
         logger.debug(`翻译结果: ${displayText} / Translation result`);
 
@@ -458,8 +494,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      * Debounced function to translate visible content
      */
     private debouncedTranslateVisibleContent = debounce(() => {
-        this.translateVisibleContent();
-    }, 5000); // 5秒钟的防抖动延迟 / 1 second debounce delay
+        // 确保不在翻译过程中再次调用
+        // Ensure not calling again while translation is in progress
+        if (!this.translationInProgress) {
+            this.translateVisibleContent();
+        } else {
+            logger.info('忽略防抖动调用，因为翻译正在进行中 / Ignoring debounced call as translation is in progress');
+        }
+    }, 5000); // 5秒钟的防抖动延迟 / 5 second debounce delay
 
     /**
      * 处理窗口滚动事件
@@ -467,6 +509,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
      */
     private handleEditorScroll(): void {
         if (!this.editor) return;
+
+        // 如果已经在进行翻译，不要再次触发
+        // If translation is already in progress, don't trigger again
+        if (this.translationInProgress) {
+            logger.debug('滚动时忽略翻译，因为翻译正在进行中 / Ignoring translation on scroll as translation is in progress');
+            return;
+        }
 
         // 使用防抖动技术处理滚动事件
         // Use debounce technique to handle scroll events
@@ -480,6 +529,13 @@ export class TranslationProvider implements vscode.CodeActionProvider {
     private translateVisibleContent(): void {
         if (!this.editor) {
             logger.info('编辑器为空，无法翻译当前可见内容 / Editor is null, cannot translate visible content');
+            return;
+        }
+
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
             return;
         }
 
@@ -526,6 +582,14 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        // 如果已经在进行翻译，则忽略此次调用
+        // If translation is already in progress, ignore this call
+        if (this.translationInProgress) {
+            logger.info('翻译操作正在进行中，忽略重复调用 / Translation operation in progress, ignoring duplicate call');
+            return;
+        }
+
+        this.translationInProgress = true;
         logger.debug('开始翻译可见窗口的注释 / Starting to translate visible comments');
 
         // 显示状态信息
@@ -584,14 +648,18 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                     `ʕ◔ϖ◔ʔ Translating ${i+1}/${untranslatedComments.length}`
                 );
 
+                // 使用提取的方法检测语言方向
+                // Use extracted method to detect language direction
+                const { sourceLang, targetLang } = this.detectLanguageDirection(commentText);
                 try {
+
                     // 执行翻译 - 通过队列控制请求频率
                     // Perform translation - control request rate through queue
                     const translatedText = await this.translationQueue.enqueue(async () => {
                         return await this.TranslationService.translate(
                             commentText,
-                            this.config.targetLang,
-                            this.config.sourceLang,
+                            targetLang,
+                            sourceLang,
                         );
                     });
 
@@ -626,8 +694,8 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                             const translatedText = await this.translationQueue.enqueue(async () => {
                                 return await this.TranslationService.translate(
                                     commentText,
-                                    this.config.targetLang,
-                                    this.config.sourceLang,
+                                    targetLang,
+                                    sourceLang,
                                 );
                             });
 
@@ -661,6 +729,7 @@ export class TranslationProvider implements vscode.CodeActionProvider {
             }
         } finally {
             statusMessage.dispose();
+            this.translationInProgress = false;
         }
     }
 
@@ -774,11 +843,11 @@ export class TranslationProvider implements vscode.CodeActionProvider {
 
             const lineDecorationType = vscode.window.createTextEditorDecorationType({
                 after: {
-                    contentText: ` → ${translatedLines[i]}`,
+                    contentText: ` ${translatedLines[i]}`,
                     fontStyle: 'italic',
                     color: this.faintColor(),
                 },
-                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
+                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
             });
 
             // 应用装饰器 - 确保在行尾显示而不是插入到最后一个字符前
@@ -915,19 +984,6 @@ export class TranslationProvider implements vscode.CodeActionProvider {
                 }
             )
         );
-
-        // 确保在插件激活时，自动翻译设置默认为开启
-        // Ensure auto translation is enabled by default when extension is activated
-        const config = vscode.workspace.getConfiguration('gopp.translation');
-        const currentValue = config.get('autoTranslateOnActiveEditor', false);
-
-        // 如果当前设置为关闭，则设置为开启
-        // If current setting is off, turn it on
-        if (currentValue === false) {
-            logger.info('初始化：启用自动翻译 / Initialization: enabling auto translation');
-            config.update('autoTranslateOnActiveEditor', true, vscode.ConfigurationTarget.Global);
-        }
-
         return provider;
     }
 

@@ -61,7 +61,7 @@ export function Args(range: vscode.Range, uri: vscode.Uri): vscode.CodeLens {
  * @param structFields 结构体字段 (struct fields)
  * @param codeLenses CodeLens数组 (CodeLens array)
  */
-export async function G(
+export function G(
     document: vscode.TextDocument,
     lineNumber: number,
     range: vscode.Range,
@@ -158,9 +158,8 @@ export async function I(
     lineNumber: number,
     range: vscode.Range,
     codeLenses: vscode.CodeLens[],
-    receiverName?: string
 ) {
-    let locations : vscode.Location[] = [];
+    let locations: vscode.Location[] = [];
     if (to === IToType.ToStruct) {  // 查找接口被实现的类
         locations = await findImplementations(document, lineNumber, name);
     } else if (to === IToType.ToInterface) { // 查找结构体实现的接口
@@ -170,27 +169,19 @@ export async function I(
     }
 
     if (locations.length > 0) {
-        if (locations.length === 1) {
-            // 如果只有一个实现，点击直接跳转
-            addCodeLens(range, {
-                title: 'Ⓘ',
-                command: 'editor.action.goToLocations',
-                arguments: [
-                    document.uri,
-                    new vscode.Position(lineNumber, 0),
-                    locations,
-                    'goto',
-                    'No implementations found'
-                ]
-            }, codeLenses);
-        } else {
-            // 多个实现时，显示数量并提供列表
-            addCodeLens(range, {
-                title: `Ⓘ ${locations.length}`,
-                command: 'editor.action.showReferences',
-                arguments: [document.uri, new vscode.Position(lineNumber, 0), locations]
-            }, codeLenses);
-        }
+        const commandArguments = [
+            document.uri,
+            new vscode.Position(lineNumber, 0),
+            locations,
+            locations.length === 1 ? 'goto' : 'peek', // 根据实现数量选择模式
+            'No implementations found'
+        ];
+
+        addCodeLens(range, {
+            title: locations.length === 1 ? 'Ⓘ' : `Ⓘ ${locations.length}`,
+            command: 'editor.action.goToLocations',
+            arguments: commandArguments
+        }, codeLenses);
     }
 }
 
@@ -212,28 +203,19 @@ export async function R(
 ) {
     const refs = await findReferences(document, lineNumber, matchTxt);
     if (refs.length > 0) {
-        if (refs.length === 1) {
-            const otherRef = getOtherReferenceLocation(refs, lineNumber, document.uri);
-            if (otherRef) {
-                addCodeLens(range, {
-                    title: 'Ⓡ',
-                    command: 'editor.action.goToLocations',
-                    arguments: [
-                        document.uri,
-                        new vscode.Position(lineNumber, 0),
-                        [otherRef],
-                        'goto',
-                        'No other references'
-                    ]
-                }, codeLenses);
-            }
-        } else {
-            addCodeLens(range, {
-                title: `Ⓡ ${refs.length}`,
-                command: 'editor.action.showReferences',
-                arguments: [document.uri, new vscode.Position(lineNumber, 0), refs]
-            }, codeLenses);
-        }
+        const title = refs.length === 1 ? 'Ⓡ' : `Ⓡ ${refs.length}`;
+        const mode = refs.length === 1 ? 'goto' : 'peek'; // 根据引用数量选择模式
+        addCodeLens(range, {
+            title,
+            command: 'editor.action.goToLocations',
+            arguments: [
+                document.uri,
+                new vscode.Position(lineNumber, 0),
+                refs,
+                mode,
+                refs.length === 1 ? 'No other references' : 'No references found'
+            ]
+        }, codeLenses);
     }
 }
 
@@ -245,7 +227,7 @@ export async function R(
  * @param codeLenses CodeLens数组 (CodeLens array)
  * @returns 是否存在 (exists or not)
  */
-function hasCodeLensType(range: vscode.Range, type: 'Ⓖ'|'Ⓡ'|'Ⓘ', codeLenses: vscode.CodeLens[]): boolean {
+function hasCodeLensType(range: vscode.Range, type: 'Ⓖ' | 'Ⓡ' | 'Ⓘ', codeLenses: vscode.CodeLens[]): boolean {
     return codeLenses.some(lens =>
         lens.range.isEqual(range) &&
         lens.command?.title.startsWith(type)
@@ -268,7 +250,7 @@ function addCodeLens(
     },
     codeLenses: vscode.CodeLens[]
 ) {
-    const type = lens.title.charAt(0) as 'Ⓖ'|'Ⓡ'|'Ⓘ';
+    const type = lens.title.charAt(0) as 'Ⓖ' | 'Ⓡ' | 'Ⓘ';
     if (!hasCodeLensType(range, type, codeLenses)) {
         codeLenses.push(new vscode.CodeLens(range, lens));
     }

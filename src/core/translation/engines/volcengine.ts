@@ -10,7 +10,7 @@ import * as crypto from 'crypto';
 export class VolcengineTranslationEngine implements TranslationEngine {
     readonly id = 'volcengine';
     readonly name = 'Volcengine Translator';
-    readonly icon = 'V'
+    readonly icon = 'Ⓥ'
 
     private readonly apiUrl = 'https://open.volcengineapi.com';
     private readonly serviceName = 'translate';
@@ -204,7 +204,6 @@ export class VolcengineTranslationEngine implements TranslationEngine {
 
         // 火山引擎翻译API的语言代码映射
         const volcengineLangMap: Record<string, string> = {
-            'zh-CN': 'zh',
             'zh-TW': 'zh-Hant',
             'en': 'en',
             'ja': 'ja',

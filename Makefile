@@ -11,6 +11,7 @@ all: compile package install
 # Compile extension source code
 compile:
 	@echo "正在编译扩展源代码... (Compiling extension source code...)"
+	npm run lint:fix && \
 	npm run compile
 
 # 开发模式：监视文件修改并自动重新编译

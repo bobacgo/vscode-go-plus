@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { IsGoFile, IsInAnnotation } from '../pkg/cond';
+import { IsGoFile } from '../pkg/cond';
 import { G, I, R, Run, Debug, Args, IToType } from '../codelens';
 import { cleanupDebugBinaries } from '../core/run/debug_binary';
 import { GoFileParser } from '../pkg/parser';
 import { Logger } from '../pkg/logger';
+import { time } from '../pkg/go/time';
 
 // 创建专属于 CodeLensProvider 的日志记录器
 const logger = Logger.withContext('CodeLensProvider');
@@ -68,6 +69,8 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         }, 30 * 60 * 1000); // 30分钟清理一次 (clear every 30 minutes)
     }
 
+
+
     // 添加防抖函数
     // Add debounce function
     private updateTimeout: NodeJS.Timeout | null = null;
@@ -80,6 +83,8 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         }, 500);
     }
 
+
+    private isFirstRun = true; // 添加第一次运行标志
     /**
      * 提供CodeLens
      * Provide CodeLens
@@ -90,6 +95,13 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         if (!this.isEnabled) {
             logger.debug('CodeLens 功能已禁用');
             return [];
+        }
+
+        // 检查Go语言服务器是否准备就绪
+        // Check if Go language server is ready
+        if (this.isFirstRun){
+            await time.sleep(4000); // 等待1秒钟 (wait for 1 second)
+            this.isFirstRun = false;
         }
 
         // 检查缓存
@@ -141,60 +153,61 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
 
             // 处理 const 全局常量
             // 显示 r
-            parser.onConstFunc = (i, constName) => {
+            parser.onConstFunc = async (i, constName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, constName, i, range, this.codeLenses);
+                await R(document, constName, i, range, this.codeLenses);
             };
 
             // 处理 var 全局变量
             // 显示 r
-            parser.onValFunc = (i, varName) => {
+            parser.onValFunc = async (i, varName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, varName, i, range, this.codeLenses);
+                await R(document, varName, i, range, this.codeLenses);
             };
 
             // 处理 func - 在测试文件中不显示函数的测试生成按钮
             // 显示 r、g
-            parser.onFuncFunc = (i, funcName) => {
+            parser.onFuncFunc = async (i, funcName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, funcName, i, range, this.codeLenses);
                 G(document, i, range, this.codeLenses); // 生成测试用例
+                await R(document, funcName, i, range, this.codeLenses);
             };
 
             // 处理 interface
             // 显示 r、i
-            parser.onInterfaceFunc = (i, interfaceName) => {
+            parser.onInterfaceFunc = async (i, interfaceName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, interfaceName, i, range, this.codeLenses);
-                I(document, interfaceName, IToType.ToStruct, i, range, this.codeLenses); // 接口到结构体
+                await I(document, interfaceName, IToType.ToStruct, i, range, this.codeLenses); // 接口到结构体
+                await R(document, interfaceName, i, range, this.codeLenses);
             };
 
             // 处理 interface 包含的方法
             // 显示 r、i
-            parser.onInterfaceMethodFunc = (i, methodName, interfaceName) => {
+            parser.onInterfaceMethodFunc = async (i, methodName, interfaceName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, methodName, i, range, this.codeLenses);
-                I(document, methodName, IToType.ToStruct, i, range, this.codeLenses, interfaceName); // 接口方法到结构体方法
+                await I(document, methodName, IToType.ToStruct, i, range, this.codeLenses); // 接口方法到结构体方法
+                await R(document, methodName, i, range, this.codeLenses);
             };
 
             // 处理 struct
             // 显示 r、i、g
-            parser.onStructFunc = (i, structName) => {
+            parser.onStructFunc = async (i, structName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, structName, i, range, this.codeLenses);
-                I(document, structName, IToType.ToInterface, i, range, this.codeLenses); // 结构体到接口
-                // 解析结构体字段
+
                 const structFields = parser.getStructFields(i); // 解析结构体字段
                 G(document, i, range, this.codeLenses, structName, structFields); // 生成测试用例
+                await I(document, structName, IToType.ToInterface, i, range, this.codeLenses); // 结构体到接口
+                await R(document, structName, i, range, this.codeLenses);
+                // 解析结构体字段
             };
 
             // 处理 struct 包含的方法
             // 显示 r、i、g
-            parser.onStructMethodFunc = (i, methodName, structName, receiverName) => {
+            parser.onStructMethodFunc = async (i, methodName, structName, receiverName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                R(document, methodName, i, range, this.codeLenses);
-                I(document, methodName, IToType.ToStructMethod, i, range, this.codeLenses); // 结构体方法到接口方法
                 G(document, i, range, this.codeLenses); // 生成测试用例
+                await I(document, methodName, IToType.ToStructMethod, i, range, this.codeLenses); // 结构体方法到接口方法
+                await R(document, methodName, i, range, this.codeLenses);
             };
 
             parser.scan();

@@ -9,7 +9,7 @@ import { Logger } from '../../../pkg/logger';
 export class MicrosoftTranslationEngine implements TranslationEngine {
     readonly id = 'microsoft';
     readonly name = 'Microsoft Translator';
-    readonly icon = 'M'
+    readonly icon = 'Ⓜ'
 
     private readonly apiUrl = 'https://api.cognitive.microsofttranslator.com/translate';
     private readonly region = 'global';
@@ -27,7 +27,9 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
      * 检查引擎是否支持指定的语言对。
      */
     supportsLanguagePair(from: string, to: string): boolean {
-        return this.supportedLanguages.includes(from) && this.supportedLanguages.includes(to);
+        const fromCode = this.convertToMicrosoftLanguageCode(from);
+        const toCode = this.convertToMicrosoftLanguageCode(to);
+        return this.supportedLanguages.includes(fromCode) && this.supportedLanguages.includes(toCode);
     }
 
     /**
@@ -55,12 +57,17 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
                 };
             }
 
+            // 转换语言代码
+            // Convert language codes
+            const fromCode = this.convertToMicrosoftLanguageCode(options.from || 'en');
+            const toCode = this.convertToMicrosoftLanguageCode(options.to);
+
             // 构建请求URL，包含查询参数
             // Build request URL with query parameters
             const queryParams = {
                 'api-version': '3.0',
-                'from': options.from || 'en',
-                'to': options.to
+                'from': fromCode,
+                'to': toCode
             };
             const requestUrl = `${this.apiUrl}?${httpClient.ObjectToQueryString(queryParams)}`;
 
@@ -97,5 +104,15 @@ export class MicrosoftTranslationEngine implements TranslationEngine {
                 to: options.to
             };
         }
+    }
+
+    /**
+     * Converts language codes to match Microsoft's API.
+     * 转换语言代码以匹配微软的API。
+     */
+    private convertToMicrosoftLanguageCode(lang: string): string {
+        if (!lang) return 'en';
+        if (lang === 'zh') return 'zh-CN'; // 简体中文
+        return lang.toLowerCase();
     }
 }
