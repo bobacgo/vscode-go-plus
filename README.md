@@ -83,27 +83,6 @@ Expand the "Go Library" panel in the VS Code explorer to view:
 
 Right-click menu supports operations like tidy, update, and source code download.
 
-### Shortcuts
-
-| Feature                             | Keybinding           |
-| ----------------------------------- | -------------------- |
-| Focus/Exit Go Library               | Ctrl(⌘) + Shift + ' |
-| Reveal current dependency in editor | Ctrl(⌘) + Shift + / |
-| // Interface definition             |                      |
-| type Greeter interface {            |                      |
-| SayHello() string                   |                      |
-| SayGoodbye() string                 |                      |
-| }                                   |                      |
-
-// Implementation
-type EnglishGreeter struct{}
-
-// Link to Greeter interface will appear here
-func (g *EnglishGreeter) SayHello() string {
-    return "Hello!"
-}
-
-```
 
 ## Requirements
 
