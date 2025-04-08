@@ -69,7 +69,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         }, 30 * 60 * 1000); // 30分钟清理一次 (clear every 30 minutes)
     }
 
-    
+
 
     // 添加防抖函数
     // Add debounce function
@@ -193,7 +193,7 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
             // 显示 r、i、g
             parser.onStructFunc = async (i, structName) => {
                 const range = new vscode.Range(i, 0, i, lines[i].length);
-                
+
                 const structFields = parser.getStructFields(i); // 解析结构体字段
                 G(document, i, range, this.codeLenses, structName, structFields); // 生成测试用例
                 await I(document, structName, IToType.ToInterface, i, range, this.codeLenses); // 结构体到接口
