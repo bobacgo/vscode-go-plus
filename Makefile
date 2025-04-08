@@ -45,8 +45,18 @@ install:
 # Publish extension to VSCode Marketplace
 publish:
 	@echo "正在发布扩展到插件市场... (Publishing extension to marketplace...)"
-	npm version patch
+	@if git tag | grep -q "$$(node -p "require('./package.json').version" | xargs -I{} echo "v{}")"; then \
+		echo "⚠️ 版本标签已存在，增加版本号... (Version tag exists, incrementing version...)"; \
+		npm --no-git-tag-version version patch && \
+		echo "更新到新版本 (Updated to new version): v$$(node -p "require('./package.json').version")" && \
+		git add package.json package-lock.json && \
+		git commit -m "chore: bump version to $$(node -p "require('./package.json').version")" && \
+		git tag -a "v$$(node -p "require('./package.json').version")" -m "v$$(node -p "require('./package.json').version")"; \
+	else \
+		npm version patch; \
+	fi
 	git push --follow-tags
+	@echo "✅ 发布流程已完成! (Publishing process completed!)"
 
 # 清理构建文件
 # Clean build artifacts
