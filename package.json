@@ -2,7 +2,7 @@
   "name": "gopp",
   "displayName": "Go ++",
   "description": "Enhance the experience of developing Go projects in VSCode (Go++, Go ++, gopp)",
-  "version": "0.1.4",
+  "version": "0.1.3",
   "publisher": "bobacgo",
   "repository": {
     "type": "git",
