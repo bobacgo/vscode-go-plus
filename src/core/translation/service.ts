@@ -205,7 +205,7 @@ export class TranslationService {
 
         // 全部是特殊字符号返回空字符串
         // If all are special characters, return empty string
-        if (/^[^\w\s]+$/.test(text)) {
+        if (/^[^\p{L}\p{N}\s]+$/u.test(text)) {
             return '';
         }
 
@@ -234,7 +234,7 @@ export class TranslationService {
         // 简单检测：如果包含中文字符，假设是中文
         // Simple detection: if contains Chinese characters, assume it's Chinese
         const chinesePattern = /[\u4e00-\u9fa5]/;
-        return chinesePattern.test(text) ? 'zh-CN' : 'en';
+        return chinesePattern.test(text) ? 'zh' : 'en';
     }
 
     /**

@@ -4,6 +4,7 @@ import { G, I, R, Run, Debug, Args, IToType } from '../codelens';
 import { cleanupDebugBinaries } from '../core/run/debug_binary';
 import { GoFileParser } from '../pkg/parser';
 import { Logger } from '../pkg/logger';
+import { time } from '../pkg/go/time';
 
 // 创建专属于 CodeLensProvider 的日志记录器
 const logger = Logger.withContext('CodeLensProvider');
@@ -82,23 +83,8 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         }, 500);
     }
 
-        /**
-     * 检查Go语言服务器是否准备就绪
-     * Check if Go language server is ready
-     * @returns 是否就绪 (is ready)
-     */
-    private async isGoServerReady(): Promise<boolean> {
-        try {
-            // 尝试执行一个简单的Go命令来检测服务器状态
-            // Try executing a simple Go command to detect server status
-            await vscode.commands.executeCommand('go.version');
-            return true;
-        } catch (e) {
-            logger.debug('Go 语言服务器未就绪');
-            return false;
-        }
-    }
 
+    private isFirstRun = true; // 添加第一次运行标志
     /**
      * 提供CodeLens
      * Provide CodeLens
@@ -113,7 +99,10 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
 
         // 检查Go语言服务器是否准备就绪
         // Check if Go language server is ready
-        await this.isGoServerReady();
+        if (this.isFirstRun){
+            await time.sleep(4000); // 等待1秒钟 (wait for 1 second)
+            this.isFirstRun = false;
+        }
 
         // 检查缓存
         // Check cache
