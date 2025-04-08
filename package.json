@@ -1,15 +1,9 @@
 {
   "name": "gopp",
   "displayName": "Go ++",
-<<<<<<< HEAD
-  "description": "Enhance the experience of developing Go projects in VSCode",
-  "version": "0.1.3",
-  "publisher": "gopp",
-=======
   "description": "Enhance the experience of developing Go projects in VSCode (Go++, Go ++, gopp)",
   "version": "0.1.2",
   "publisher": "bobacgo",
->>>>>>> dev
   "repository": {
     "type": "git",
     "url": "https://github.com/bobacgo/vscode-go-plus.git"
