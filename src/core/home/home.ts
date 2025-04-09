@@ -76,16 +76,16 @@ export class Home {
 
         // 定义菜单选项
         const options: vscode.QuickPickItem[] = [
-            { label: '$(history) 最近打开的项目', description: '查看并打开最近的项目' },
-            { label: '$(settings-gear) 设置Go ++', description: 'Go Studio 相关配置选项' },
-            { label: '$(issue-opened) 报告问题', description: '创建 GitHub issue 报告问题或提出建议' }
+            { label: '$(history) Recent Projects', description: 'View and open recent projects' },
+            { label: '$(settings-gear) Configure Go++', description: 'Go Studio configuration options' },
+            { label: '$(issue-opened) Report Issue', description: 'Create GitHub issue to report problems or suggestions' }
         ];
 
         // 创建一个 Map 来存储额外数据
         const actionMap = new Map<string, { action: string }>();
-        actionMap.set('$(history) 最近打开的项目', { action: 'recent' });
-        actionMap.set('$(settings-gear) 设置Go ++', { action: 'settings' });
-        actionMap.set('$(issue-opened) 报告问题', { action: 'issue' });
+        actionMap.set('$(history) Recent Projects', { action: 'recent' });
+        actionMap.set('$(settings-gear) Configure Go++', { action: 'settings' });
+        actionMap.set('$(issue-opened) Report Issue', { action: 'issue' });
 
         // 显示 QuickPick 菜单
         const quickPick = vscode.window.createQuickPick();

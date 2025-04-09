@@ -63,6 +63,9 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
             treeDataProvider: this
         });
 
+        // 注册视图操作按钮
+        this.registerViewActions();
+
         // 注册提供者
         _context.subscriptions.push(
             this._treeView,
@@ -72,6 +75,47 @@ export class GoLibraryTreeData implements vscode.TreeDataProvider<ModItem>, vsco
             vscode.window.onDidChangeActiveTextEditor(editor => {
                 this.syncTreeWithEditor(editor);
             })
+        );
+    }
+
+    /**
+     * 注册视图操作按钮
+     * Register view action buttons
+     */
+    private registerViewActions(): void {
+        if (!this._treeView) {
+            return;
+        }
+
+        // 注册刷新按钮
+        // Register refresh button
+        const refreshDisposable = vscode.commands.registerCommand('golibraries.refreshButton', async () => {
+            await this.refreshWithProgress();
+        });
+        this._ctx.subscriptions.push(refreshDisposable);
+
+    }
+
+    /**
+     * 带进度条的刷新操作
+     * Refresh with progress indicator
+     */
+    public async refreshWithProgress(): Promise<void> {
+        // 显示进度提示
+        // Show progress notification
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: '正在刷新 Go 模块树 / Refreshing Go module tree',
+                cancellable: false
+            },
+            async (progress) => {
+                // 刷新树视图
+                // Refresh tree view
+                await this.refreshModules();
+                progress.report({ increment: 100 });
+                vscode.window.showInformationMessage('Go 模块树刷新成功！/ Go module tree refreshed successfully!');
+            }
         );
     }
 
