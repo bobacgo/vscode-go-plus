@@ -2,7 +2,7 @@
   "name": "gopp",
   "displayName": "Go++",
   "description": "Enhance the experience of developing Go projects in VSCode (Go++, Go ++, gopp)",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "bobacgo",
   "repository": {
     "type": "git",
@@ -27,81 +27,81 @@
   "contributes": {
     "commands": [
       {
-      "command": "gopp.generateCode",
-      "title": "Go++: 生成代码 (Generate Code)",
-      "icon": "$(add)"
+        "command": "gopp.generateCode",
+        "title": "Go++: 生成代码 (Generate Code)",
+        "icon": "$(add)"
       },
       {
-      "command": "gopp.navigateToInterface",
-      "title": "Go++: Navigate to Interface (导航到接口)",
-      "icon": "$(references)"
+        "command": "gopp.navigateToInterface",
+        "title": "Go++: Navigate to Interface (导航到接口)",
+        "icon": "$(references)"
       },
       {
-      "command": "gopp.listInterfaceImplementations",
-      "title": "Go++: List Interface Implementations (列出接口实现)",
-      "icon": "$(list-tree)"
+        "command": "gopp.listInterfaceImplementations",
+        "title": "Go++: List Interface Implementations (列出接口实现)",
+        "icon": "$(list-tree)"
       },
       {
-      "command": "gopp.listMethodImplementations",
-      "title": "Go++: List Method Implementations (列出方法实现)",
-      "icon": "$(list-unordered)"
+        "command": "gopp.listMethodImplementations",
+        "title": "Go++: List Method Implementations (列出方法实现)",
+        "icon": "$(list-unordered)"
       },
       {
-      "command": "gopp.navigateToInterfaceMethod",
-      "title": "Go++: Navigate to Interface Method (导航到接口方法)",
-      "icon": "$(go-to-file)"
+        "command": "gopp.navigateToInterfaceMethod",
+        "title": "Go++: Navigate to Interface Method (导航到接口方法)",
+        "icon": "$(go-to-file)"
       },
       {
-      "command": "gopp.generateOptions",
-      "title": "Go++: 生成代码选项 (Generate Code Options)",
-      "icon": "$(gear)"
+        "command": "gopp.generateOptions",
+        "title": "Go++: 生成代码选项 (Generate Code Options)",
+        "icon": "$(gear)"
       },
       {
-      "command": "gopp.generateUnitTest",
-      "title": "Go++: 生成单元测试 (Generate Unit Tests)",
-      "icon": "$(beaker)"
+        "command": "gopp.generateUnitTest",
+        "title": "Go++: 生成单元测试 (Generate Unit Tests)",
+        "icon": "$(beaker)"
       },
       {
-      "command": "gopp.generateOptionCode",
-      "title": "Go++: 生成 Option 代码 (Generate Option Code)",
-      "icon": "$(symbol-parameter)"
+        "command": "gopp.generateOptionCode",
+        "title": "Go++: 生成 Option 代码 (Generate Option Code)",
+        "icon": "$(symbol-parameter)"
       },
       {
-      "command": "gopp.runMain",
-      "title": "Go++: 运行 Go Main 函数"
+        "command": "gopp.runMain",
+        "title": "Go++: 运行 Go Main 函数"
       },
       {
-      "command": "gopp.debugMain",
-      "title": "Go++: 调试 Go Main 函数"
+        "command": "gopp.debugMain",
+        "title": "Go++: 调试 Go Main 函数"
       },
       {
-      "command": "gopp.runMainWithArgs",
-      "title": "Go++: 带参数运行 Go Main 函数"
+        "command": "gopp.runMainWithArgs",
+        "title": "Go++: 带参数运行 Go Main 函数"
       },
       {
-      "command": "gopp.debugMainWithArgs",
-      "title": "Go++: 带参数调试 Go Main 函数"
+        "command": "gopp.debugMainWithArgs",
+        "title": "Go++: 带参数调试 Go Main 函数"
       },
       {
-      "command": "gopp.setMainArgs",
-      "title": "Go++: 设置 Go Main 函数参数"
+        "command": "gopp.setMainArgs",
+        "title": "Go++: 设置 Go Main 函数参数"
       },
       {
-      "command": "gopp.home",
-      "title": "Go++: 打开工作空间导航器 (Open Workspace Navigator)",
-      "category": "Go++",
-      "icon": "$(project)"
+        "command": "gopp.home",
+        "title": "Go++: 打开工作空间导航器 (Open Workspace Navigator)",
+        "category": "Go++",
+        "icon": "$(project)"
       },
       {
-      "command": "gopp.translateSettings",
-      "title": "Go++: 翻译设置 (Translation Settings)",
-      "icon": "$(settings-gear)"
+        "command": "gopp.translateSettings",
+        "title": "Go++: 翻译设置 (Translation Settings)",
+        "icon": "$(settings-gear)"
       },
       {
-      "command": "gopp.workspaceNavigator",
-      "title": "Go++: 工作空间导航 (Workspace Navigation)",
-      "category": "Go++",
-      "icon": "$(home)"
+        "command": "gopp.workspaceNavigator",
+        "title": "Go++: 工作空间导航 (Workspace Navigation)",
+        "category": "Go++",
+        "icon": "$(home)"
       },
       {
         "command": "golibraries.refreshButton",
