@@ -11,7 +11,7 @@ export function registerCommandRunMain(ctx: vscode.ExtensionContext, cmd: string
     // 获取文件参数映射
     // Get file arguments mapping
     const fileArgsMap = ctx.workspaceState.get<{[key: string]: string}>('goFileArgsMap') || {};
-    
+
     return vscode.commands.registerCommand(cmd, async (fileUri: vscode.Uri) => {
         await runGoFile(fileUri, false, fileArgsMap);
     });
@@ -27,7 +27,7 @@ export function registerCommandDebugMain(ctx: vscode.ExtensionContext, cmd: stri
     // 获取文件参数映射
     // Get file arguments mapping
     const fileArgsMap = ctx.workspaceState.get<{[key: string]: string}>('goFileArgsMap') || {};
-    
+
     return vscode.commands.registerCommand(cmd, async (fileUri: vscode.Uri) => {
         await runGoFile(fileUri, true, fileArgsMap);
     });
@@ -43,7 +43,7 @@ export function registerCommandSetMainArgs(ctx: vscode.ExtensionContext, cmd: st
     // 获取文件参数映射
     // Get file arguments mapping
     const fileArgsMap = ctx.workspaceState.get<{[key: string]: string}>('goFileArgsMap') || {};
-    
+
     return vscode.commands.registerCommand(cmd, async (fileUri: vscode.Uri) => {
         await setGoFileArgs(fileUri, fileArgsMap, ctx);
     });
@@ -149,7 +149,7 @@ async function runGoFile(
         // 优先使用go.mod支持的方式运行
         // Prioritize running with go.mod support
         terminal.sendText(`go run . ${args}`);
-        
+
         terminal.show();
     }
 }
@@ -162,33 +162,33 @@ async function runGoFile(
  */
 function parseArguments(argsString: string): string[] {
     if (!argsString) return [];
-    
+
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
     let escapeNext = false;
-    
+
     // 遍历字符串中的每个字符
     // Iterate through each character in the string
     for (let i = 0; i < argsString.length; i++) {
         const char = argsString[i];
-        
+
         if (escapeNext) {
             current += char;
             escapeNext = false;
             continue;
         }
-        
+
         if (char === '\\') {
             escapeNext = true;
             continue;
         }
-        
-        if (char === '"' || char === "'") {
+
+        if (char === '"' || char === '\'') {
             inQuotes = !inQuotes;
             continue;
         }
-        
+
         if (char === ' ' && !inQuotes) {
             if (current) {
                 result.push(current);
@@ -196,13 +196,13 @@ function parseArguments(argsString: string): string[] {
             }
             continue;
         }
-        
+
         current += char;
     }
-    
+
     if (current) {
         result.push(current);
     }
-    
+
     return result;
 }
