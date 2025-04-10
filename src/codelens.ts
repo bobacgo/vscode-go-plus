@@ -72,7 +72,7 @@ export function G(
     if (!IsInWorkspace(document)) { // 如果不在工作空间中，则不显示按钮
         return;
     }
-    
+
     if (structName && structName !== '') {  // 是一个结构体
         const filePath = document.uri.fsPath;
         const fields = structFields || []; // 防止 structFields 为 undefined
