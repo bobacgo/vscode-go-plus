@@ -266,8 +266,7 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
-    "chokidar": "^3.6.0",
-    "tencentcloud-sdk-nodejs-tmt": "^4.0.1027"
+    "chokidar": "^3.6.0"
   },
   "keywords": [
     "Go",
