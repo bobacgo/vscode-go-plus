@@ -3,12 +3,12 @@ import * as path from 'path';
 import { InterfaceInfo, ImplementationInfo, MethodImplementationInfo } from '../types';
 
 /**
- * 注册接口导航相关命令
- * @param context 扩展上下文
+ * 注册命令以跳转到接口定义
+ * Register command to navigate to interface definition
+ * @param cmd 命令名称 (command name)
  */
-export function registerNavigationCommands(context: vscode.ExtensionContext) {
-    // 注册接口导航命令 - 跳转到接口定义
-    const disposable = vscode.commands.registerCommand('gopp.navigateToInterface', async (interfaceInfo: InterfaceInfo) => {
+export function registerCommandNavigateToInterface(cmd: string): vscode.Disposable {
+    return vscode.commands.registerCommand(cmd, async (interfaceInfo: InterfaceInfo) => {
         const uri = vscode.Uri.file(interfaceInfo.filePath);
         const document = await vscode.workspace.openTextDocument(uri);
         const position = new vscode.Position(interfaceInfo.lineNumber - 1, 0);
@@ -17,11 +17,15 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
             selection: new vscode.Range(position, position)
         });
     });
+}
 
-    context.subscriptions.push(disposable);
-
-    // 注册接口方法导航命令 - 跳转到接口方法
-    const disposableMethod = vscode.commands.registerCommand('gopp.navigateToInterfaceMethod', async (interfaceInfo: InterfaceInfo, methodName: string) => {
+/**
+ * 注册命令以跳转到接口方法
+ * Register command to navigate to interface method
+ * @param cmd 命令名称 (command name)
+ */
+export function registerCommandNavigateToInterfaceMethod(cmd: string): vscode.Disposable {
+    return vscode.commands.registerCommand(cmd, async (interfaceInfo: InterfaceInfo, methodName: string) => {
         const uri = vscode.Uri.file(interfaceInfo.filePath);
         const document = await vscode.workspace.openTextDocument(uri);
 
@@ -72,11 +76,15 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
             });
         }
     });
+}
 
-    context.subscriptions.push(disposableMethod);
-
-    // 注册展示接口实现列表命令
-    const disposableImplementations = vscode.commands.registerCommand('gopp.listInterfaceImplementations', async (interfaceInfo: InterfaceInfo, implementations: ImplementationInfo[]) => {
+/**
+ * 注册命令以列出接口实现
+ * Register command to list interface implementations
+ * @param cmd 命令名称 (command name)
+ */
+export function registerCommandListInterfaceImplementations(cmd: string): vscode.Disposable {
+    return vscode.commands.registerCommand(cmd, async (interfaceInfo: InterfaceInfo, implementations: ImplementationInfo[]) => {
         if (implementations.length === 0) {
             vscode.window.showInformationMessage(`No implementations found for interface ${interfaceInfo.name}`);
             return;
@@ -107,11 +115,15 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
             });
         }
     });
+}
 
-    context.subscriptions.push(disposableImplementations);
-
-    // 注册方法实现列表命令
-    const disposableMethodImplementations = vscode.commands.registerCommand('gopp.listMethodImplementations', async (methodName: string, implementations: MethodImplementationInfo[]) => {
+/**
+ * 注册命令以列出方法实现
+ * Register command to list method implementations
+ * @param cmd 命令名称 (command name)
+ */
+export function registerCommandListMethodImplementations(cmd: string): vscode.Disposable {
+    return vscode.commands.registerCommand(cmd, async (methodName: string, implementations: MethodImplementationInfo[]) => {
         if (implementations.length === 0) {
             vscode.window.showInformationMessage(`No implementations found for method ${methodName}`);
             return;
@@ -142,6 +154,4 @@ export function registerNavigationCommands(context: vscode.ExtensionContext) {
             });
         }
     });
-
-    context.subscriptions.push(disposableMethodImplementations);
 }

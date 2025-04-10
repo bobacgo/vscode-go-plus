@@ -1,8 +1,8 @@
 {
   "name": "gopp",
-  "displayName": "Go ++",
+  "displayName": "Go++",
   "description": "Enhance the experience of developing Go projects in VSCode (Go++, Go ++, gopp)",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "bobacgo",
   "repository": {
     "type": "git",
@@ -50,14 +50,6 @@
         "command": "gopp.navigateToInterfaceMethod",
         "title": "Go++: Navigate to Interface Method (导航到接口方法)",
         "icon": "$(go-to-file)"
-      },
-      {
-        "command": "gopp.runMain",
-        "title": "Go++: Run Main"
-      },
-      {
-        "command": "gopp.debugMain",
-        "title": "Go++: Debug Main"
       },
       {
         "command": "gopp.generateOptions",
@@ -110,6 +102,11 @@
         "title": "Go++: 工作空间导航 (Workspace Navigation)",
         "category": "Go++",
         "icon": "$(home)"
+      },
+      {
+        "command": "golibraries.refreshButton",
+        "title": "刷新 Go 模块树",
+        "icon": "$(refresh)"
       }
     ],
     "views": {
@@ -228,6 +225,15 @@
     },
     "codeLens": {
       "language": "go"
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "golibraries.refreshButton",
+          "when": "view == golibraries",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
@@ -260,8 +266,7 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
-    "chokidar": "^3.6.0",
-    "tencentcloud-sdk-nodejs-tmt": "^4.0.1027"
+    "chokidar": "^3.6.0"
   },
   "keywords": [
     "Go",

@@ -78,19 +78,19 @@ export function G(
         const fields = structFields || []; // 防止 structFields 为 undefined
         const opts = [
             {
-                label: '实现接口方法',
+                label: 'Implement Interface Method',
                 description: '为结构体实现指定接口',
                 command: 'gopp.generateInterfaceStubs',
                 arguments: [structName, filePath, lineNumber + 1]
             },
             {
-                label: '生成结构体标签',
+                label: 'Generate Struct Tags',
                 description: '为结构体字段生成标签',
                 command: 'gopp.generateStructTags',
                 arguments: [structName, filePath, lineNumber + 1, fields]
             },
             {
-                label: '生成 Option 代码',
+                label: 'Generate Option Pattern Code',
                 description: '生成 Option 模式代码',
                 command: 'gopp.generateOptionCode',
                 arguments: [structName, filePath, lineNumber + 1, fields]
@@ -99,7 +99,7 @@ export function G(
 
         if (!IsTestFile(document)) { // 如果不是测试文件，则显示生成测试用例按钮
             opts.push({
-                label: '生成单元测试',
+                label: 'Generate Unit Tests',
                 description: '为当前文件生成测试文件',
                 command: 'go.test.generate.file',
                 arguments: [structName, filePath, lineNumber + 1]
