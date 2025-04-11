@@ -51,13 +51,13 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                 // 标记为编辑中状态
                 // Mark as editing state
                 this.isEditing = true;
-                
+
                 // 清除之前的编辑定时器
                 // Clear previous editing timer
                 if (this.editingTimer) {
                     clearTimeout(this.editingTimer);
                 }
-                
+
                 // 设置新的编辑定时器，编辑结束后再更新
                 // Set new editing timer, update only after editing finishes
                 this.editingTimer = setTimeout(() => {
@@ -104,13 +104,13 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         if (this.isEditing) {
             return;
         }
-        
+
         // 如果提供了URI，清除该文件的缓存
         // If URI is provided, clear cache for that file
         if (uri) {
             this.cache.delete(uri.toString());
         }
-        
+
         // 使用防抖函数延迟更新
         // Use debounce function to delay update
         this.debounceUpdate();

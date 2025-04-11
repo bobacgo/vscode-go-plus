@@ -77,7 +77,7 @@ export class GoFileParser {
                             this.onConstFunc(i, constName);
                             return null;
                         }
-                        
+
                         // 处理常量块声明开始
                         if (line.trim() === 'const (' || line.match(/^const\s+\(/)) {
                             this.processDeclarationBlock(i + 1, ')', this.onConstFunc);
@@ -95,7 +95,7 @@ export class GoFileParser {
                             this.onValFunc(i, varName);
                             return null;
                         }
-                        
+
                         // 处理变量块声明开始
                         if (line.trim() === 'var (' || line.match(/^var\s+\(/)) {
                             this.processDeclarationBlock(i + 1, ')', this.onValFunc);
@@ -331,8 +331,8 @@ export class GoFileParser {
      * @param handler Callback function to handle each declaration
      */
     private processDeclarationBlock(
-        startLine: number, 
-        endToken: string, 
+        startLine: number,
+        endToken: string,
         handler: (line: number, name: string) => void
     ): void {
         let currentLine = startLine;
@@ -341,7 +341,7 @@ export class GoFileParser {
             if (declarationLine === endToken) {
                 break; // 声明块结束
             }
-            
+
             // 忽略空行和注释
             if (declarationLine && !declarationLine.startsWith('//')) {
                 // 匹配声明名称 (可能包含或不包含类型和值)

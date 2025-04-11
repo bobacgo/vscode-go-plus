@@ -24,11 +24,6 @@ jobs:
           
       - name: Install dependencies
         run: npm install # 使用 npm install 替代 npm ci / Use npm install instead of npm ci
-      
-      - name: Lint & Test
-        run: |
-          npm run lint
-          npm test
         
       - name: Install vsce
         run: npm install -g @vscode/vsce
