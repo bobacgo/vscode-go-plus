@@ -70,10 +70,17 @@ export class GoFileParser {
                     // 处理 const 全局常量
                     // 显示 r
                     if (this.onConstFunc) {
-                        const matches = line.match(/^const\s+(\w+)/);
-                        if (matches) {
-                            const constName = matches[1];
+                        // 处理单行常量声明
+                        const singleConstMatch = line.match(/^const\s+(\w+)/);
+                        if (singleConstMatch) {
+                            const constName = singleConstMatch[1];
                             this.onConstFunc(i, constName);
+                            return null;
+                        }
+                        
+                        // 处理常量块声明开始
+                        if (line.trim() === 'const (' || line.match(/^const\s+\(/)) {
+                            this.processDeclarationBlock(i + 1, ')', this.onConstFunc);
                             return null;
                         }
                     }
@@ -81,10 +88,17 @@ export class GoFileParser {
                     // 处理 var 全局变量
                     // 显示 r
                     if (this.onValFunc) {
-                        const matches = line.match(/^var\s+(\w+)/);
-                        if (matches) {
-                            const varName = matches[1];
+                        // 处理单行变量声明
+                        const singleVarMatch = line.match(/^var\s+(\w+)/);
+                        if (singleVarMatch) {
+                            const varName = singleVarMatch[1];
                             this.onValFunc(i, varName);
+                            return null;
+                        }
+                        
+                        // 处理变量块声明开始
+                        if (line.trim() === 'var (' || line.match(/^var\s+\(/)) {
+                            this.processDeclarationBlock(i + 1, ')', this.onValFunc);
                             return null;
                         }
                     }
@@ -307,6 +321,37 @@ export class GoFileParser {
             }
         }
         return null;
+    }
+
+    /**
+     * Process declaration blocks (const/var) and call the appropriate handler for each item
+     * 处理声明块(常量/变量)并为每个项调用适当的处理函数
+     * @param startLine Start line of the block content (after opening parenthesis)
+     * @param endToken Token that marks the end of the block
+     * @param handler Callback function to handle each declaration
+     */
+    private processDeclarationBlock(
+        startLine: number, 
+        endToken: string, 
+        handler: (line: number, name: string) => void
+    ): void {
+        let currentLine = startLine;
+        while (currentLine < this.lines.length) {
+            const declarationLine = this.lines[currentLine].trim();
+            if (declarationLine === endToken) {
+                break; // 声明块结束
+            }
+            
+            // 忽略空行和注释
+            if (declarationLine && !declarationLine.startsWith('//')) {
+                // 匹配声明名称 (可能包含或不包含类型和值)
+                const match = declarationLine.match(/^(\w+)(?:\s|=|$)/);
+                if (match) {
+                    handler(currentLine, match[1]);
+                }
+            }
+            currentLine++;
+        }
     }
 }
 
