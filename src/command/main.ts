@@ -126,7 +126,7 @@ async function runGoFile(
         // Use VS Code's built-in Go debugger to start debugging
         const debugConfig = {
             type: 'go',
-            name: 'Debug Go ' + dirName,
+            name: dirName,
             request: 'launch',
             mode: 'debug',
             program: directory,

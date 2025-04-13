@@ -5,7 +5,6 @@ import { Logger } from './pkg/logger';  // 新增日志模块导入
 import { Home } from './core/home/home';  // 导入工作空间导航器模块
 import { TranslationProvider } from './core/translation/provider';  // 导入翻译提供程序
 import { DisposeCommands } from './command/commands';
-import { GoLibraryTreeData } from './core/library/tree';  // 导入Go Library树视图数据模块
 
 /*
 

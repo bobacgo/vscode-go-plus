@@ -78,7 +78,6 @@ export class TencentTranslationEngine implements TranslationEngine {
             const action = 'TextTranslate';
             const version = '2018-03-21';
             const timestamp = Math.round(Date.now() / 1000);
-            
             // 请求体参数
             // Request body parameters
             const requestPayload = {
@@ -95,11 +94,11 @@ export class TencentTranslationEngine implements TranslationEngine {
             const canonicalQueryString = '';
             const canonicalHeaders = `content-type:application/json; charset=utf-8\nhost:${endpoint}\n`;
             const signedHeaders = 'content-type;host';
-            
+
             // JSON格式化请求体
             // Format request body as JSON
             const requestPayloadStr = JSON.stringify(requestPayload);
-            
+
             // 生成规范请求字符串
             // Generate canonical request string
             const hashedRequestPayload = crypto.createHash('sha256')
@@ -113,7 +112,6 @@ export class TencentTranslationEngine implements TranslationEngine {
                 signedHeaders,
                 hashedRequestPayload
             ].join('\n');
-            
             // 生成签名字符串
             // Generate string to sign
             const algorithm = 'TC3-HMAC-SHA256';
@@ -128,7 +126,6 @@ export class TencentTranslationEngine implements TranslationEngine {
                 credentialScope,
                 hashedCanonicalRequest
             ].join('\n');
-            
             // 计算签名
             // Calculate signature
             const secretDate = this.sign(date, `TC3${this.secretKey}`);
@@ -137,7 +134,6 @@ export class TencentTranslationEngine implements TranslationEngine {
             const signature = crypto.createHmac('sha256', secretSigning)
                 .update(stringToSign)
                 .digest('hex');
-            
             // 构建授权头
             // Build authorization header
             const authorization = [
@@ -145,12 +141,11 @@ export class TencentTranslationEngine implements TranslationEngine {
                 `SignedHeaders=${signedHeaders}`,
                 `Signature=${signature}`
             ].join(', ');
-            
             // 使用自定义httpClient发送请求
             // Send request using custom httpClient
             const response = await httpClient.Post<any>(
                 `https://${endpoint}`,
-                requestPayload, 
+                requestPayload,
                 {
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -163,17 +158,16 @@ export class TencentTranslationEngine implements TranslationEngine {
                     }
                 }
             );
-            
+
             // 解析响应
             // Parse response
             const data = response.Response;
-            
+
             // 处理错误
             // Handle error
             if (data.Error) {
                 throw new Error(`${data.Error.Code}: ${data.Error.Message}`);
             }
-            
             // 提取翻译结果
             // Extract translation result
             if (data && data.TargetText) {
