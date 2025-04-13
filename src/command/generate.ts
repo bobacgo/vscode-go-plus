@@ -259,7 +259,7 @@ export function registerCommandGenerateStructTags(cmd : string) : vscode.Disposa
             return;
         }
 
-        // 2. 生成带标签的字段
+        // 3. 生成带标签的字段
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             const document = editor.document;
@@ -269,7 +269,6 @@ export function registerCommandGenerateStructTags(cmd : string) : vscode.Disposa
             for (const field of fields.filter(f => f.isExported)) {
                 const line = field.line;
                 const lineText = document.lineAt(line).text;
-                const currentTags = lineText.match(/`.*`$/);
 
                 // 根据选择的格式转换字段名
                 const tagValue = formatType.value === 'camel'
@@ -277,6 +276,9 @@ export function registerCommandGenerateStructTags(cmd : string) : vscode.Disposa
                     : field.name.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
 
                 const newTag = `${tagName}:"${tagValue}"`;
+
+                // 检查当前行是否已有标签
+                const currentTags = lineText.match(/`.*`/);
 
                 if (currentTags) {
                     // 检查是否已存在相同的标签
@@ -286,17 +288,32 @@ export function registerCommandGenerateStructTags(cmd : string) : vscode.Disposa
                     if (!tagExists) {
                         // 已有其他标签，添加新标签
                         const updatedTags = `\`${existingTags} ${newTag}\``;
+                        const tagStartPos = lineText.indexOf('`');
                         changes.push(vscode.TextEdit.replace(
-                            new vscode.Range(line, lineText.lastIndexOf('`') - 1, line, lineText.length),
+                            new vscode.Range(line, tagStartPos, line, tagStartPos + currentTags[0].length),
                             updatedTags
                         ));
                     }
                 } else {
-                    // 没有标签，添加新标签
-                    changes.push(vscode.TextEdit.insert(
-                        new vscode.Position(line, lineText.length),
-                        ' `' + newTag + '`'
-                    ));
+                    // 查找类型结束的位置 (可能在注释之前)
+                    const typeRegex = new RegExp(`\\s+${field.name}\\s+([^\\s/]+)`);
+                    const typeMatch = lineText.match(typeRegex);
+
+                    if (typeMatch) {
+                        // 找到类型名称的结束位置
+                        const typePos = lineText.indexOf(typeMatch[1]) + typeMatch[1].length;
+                        // 插入标签到类型之后
+                        changes.push(vscode.TextEdit.insert(
+                            new vscode.Position(line, typePos),
+                            ' `' + newTag + '`'
+                        ));
+                    } else {
+                        // 如果无法识别类型位置，则添加到行末
+                        changes.push(vscode.TextEdit.insert(
+                            new vscode.Position(line, lineText.length),
+                            ' `' + newTag + '`'
+                        ));
+                    }
                 }
             }
 

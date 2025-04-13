@@ -58,13 +58,30 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
                     clearTimeout(this.editingTimer);
                 }
 
-                // 设置新的编辑定时器，编辑结束后再更新
-                // Set new editing timer, update only after editing finishes
+                // 不立即删除缓存，而是标记版本需要更新
+                // Don't immediately delete cache, but mark version for update
+                const cacheKey = e.document.uri.toString();
+                const cachedData = this.cache.get(cacheKey);
+
+                // 如果有缓存，我们更新偏移量而不是删除缓存
+                // If there is cache, update offsets instead of deleting cache
+                if (cachedData) {
+                    this.updateCodeLensPositions(e.document, cachedData.codeLenses, e.contentChanges);
+
+                    // 更新缓存中的版本号，但保留调整过位置的 CodeLens
+                    // Update version in cache, but keep the CodeLenses with adjusted positions
+                    this.cache.set(cacheKey, {
+                        version: e.document.version,
+                        codeLenses: cachedData.codeLenses
+                    });
+                }
+
+                // 设置新的编辑定时器，编辑结束后再彻底刷新
+                // Set new editing timer, completely refresh after editing finishes
                 this.editingTimer = setTimeout(() => {
-                    // this.isEditing = false;
-                    this.cache.delete(e.document.uri.toString());
+                    this.isEditing = false;
                     this.debounceUpdate();
-                }, 10000); // 编辑停止1秒后才更新 (update 1 second after editing stops)
+                }, 2000); // 编辑停止2秒后彻底刷新 (complete refresh 2 seconds after editing stops)
             }
         });
 
@@ -280,6 +297,45 @@ class GoCodeLensProvider implements vscode.CodeLensProvider {
         } catch (error) {
             logger.error('生成 CodeLens 时发生错误', error);
             return [];
+        }
+    }
+
+    /**
+     * 根据文档变更更新 CodeLens 位置
+     * Update CodeLens positions based on document changes
+     * @param document 文档 (document)
+     * @param codeLenses CodeLens数组 (CodeLens array)
+     * @param changes 文档变更 (document changes)
+     */
+    private updateCodeLensPositions(
+        document: vscode.TextDocument,
+        codeLenses: vscode.CodeLens[],
+        changes: readonly vscode.TextDocumentContentChangeEvent[]
+    ): void {
+        // 按照变更发生的顺序应用偏移量
+        // Apply offsets in the order changes occurred
+        for (const change of changes) {
+            const startLine = change.range.start.line;
+            const endLine = change.range.end.line;
+            const newLines = (change.text.match(/\n/g) || []).length;
+            const linesAdded = newLines - (endLine - startLine);
+
+            // 对每个 CodeLens 应用偏移量
+            // Apply offset to each CodeLens
+            for (const lens of codeLenses) {
+                const lensLine = lens.range.start.line;
+
+                // 只调整在变更行之后的 CodeLens
+                // Only adjust CodeLenses after the change line
+                if (lensLine > endLine) {
+                    // 创建新的范围，保持列位置不变，仅调整行号
+                    // Create new range, keep column position unchanged, only adjust line number
+                    lens.range = new vscode.Range(
+                        lensLine + linesAdded, lens.range.start.character,
+                        lensLine + linesAdded, lens.range.end.character
+                    );
+                }
+            }
         }
     }
 }
